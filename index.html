@@ -934,7 +934,9 @@
 // ═══════════════════════════════════════════════
 //  ЯЗЫК ИНТЕРФЕЙСА
 // ═══════════════════════════════════════════════
-let lang = localStorage.getItem('cyberCalcLang') || 'ru';
+const _urlLang = new URLSearchParams(window.location.search).get('lang');
+let lang = _urlLang || localStorage.getItem('cyberCalcLang') || 'ru';
+if (_urlLang) localStorage.setItem('cyberCalcLang', _urlLang);
 
 const T = {
     title1:        { ru:'КИБЕР',      en:'CYBER',         zh:'网络' },
