@@ -567,9 +567,111 @@
         .ws-btn.active { background:rgba(255,179,0,0.1); border-color:rgba(255,179,0,0.5); color:var(--gold); text-shadow:0 0 6px var(--gold); }
         .ws-btn:hover { color:var(--gold); }
         .prog-popcount { font-size:8px; color:rgba(0,255,136,0.4); letter-spacing:1px; text-align:right; margin-bottom:2px; min-height:12px; }
+
+        /* ── ЭКРАН АКТИВАЦИИ ── */
+        #key-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #03030a;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        #key-overlay::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                repeating-linear-gradient(60deg,  transparent, transparent 28px, rgba(0,229,255,0.018) 28px, rgba(0,229,255,0.018) 29px),
+                repeating-linear-gradient(-60deg, transparent, transparent 28px, rgba(0,229,255,0.018) 28px, rgba(0,229,255,0.018) 29px);
+            pointer-events: none;
+        }
+        .key-box {
+            position: relative;
+            width: 380px;
+            background: linear-gradient(160deg, #0d0d22, #07070f);
+            border: 1px solid rgba(0,229,255,0.25);
+            border-radius: 8px;
+            padding: 36px 32px 28px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(0,229,255,0.07), 0 0 120px rgba(157,0,255,0.05);
+            animation: calcBorder 10s ease-in-out infinite;
+        }
+        .key-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px; font-weight: 900; letter-spacing: 4px;
+            color: #fff; text-shadow: 0 0 20px rgba(0,229,255,0.8);
+            margin-bottom: 4px;
+            animation: titleFlicker 8s ease-in-out infinite;
+        }
+        .key-logo span { color: var(--cyan); }
+        .key-sub {
+            font-size: 9px; letter-spacing: 3px; color: rgba(0,229,255,0.35);
+            margin-bottom: 28px;
+        }
+        .key-label {
+            font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.25);
+            text-align: left; margin-bottom: 6px;
+        }
+        .key-input-wrap { position: relative; margin-bottom: 10px; }
+        #key-input {
+            width: 100%; padding: 11px 44px 11px 14px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 4px;
+            color: var(--cyan); font-family: 'Share Tech Mono', monospace;
+            font-size: 15px; letter-spacing: 3px; text-align: center;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+        }
+        #key-input:focus { border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,0.2); }
+        #key-input.shake { animation: keyShake 0.4s ease; border-color: var(--red); box-shadow: 0 0 14px rgba(255,68,68,0.3); }
+        #key-input.ok    { border-color: var(--green); box-shadow: 0 0 14px rgba(0,255,136,0.3); }
+        @keyframes keyShake {
+            0%,100%{transform:translateX(0);}
+            20%{transform:translateX(-8px);} 40%{transform:translateX(8px);}
+            60%{transform:translateX(-5px);} 80%{transform:translateX(5px);}
+        }
+        #key-error {
+            font-size: 10px; letter-spacing: 2px; color: var(--red);
+            text-shadow: 0 0 8px var(--red); min-height: 16px;
+            margin-bottom: 14px; transition: opacity 0.3s;
+        }
+        #key-btn {
+            width: 100%; padding: 11px;
+            background: transparent;
+            border: 1px solid rgba(0,229,255,0.3);
+            border-radius: 4px;
+            color: var(--cyan); font-family: 'Share Tech Mono', monospace;
+            font-size: 11px; letter-spacing: 3px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        #key-btn:hover { background: rgba(0,229,255,0.07); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,0.15); }
+        .key-footer {
+            margin-top: 20px; font-size: 8px; letter-spacing: 1px;
+            color: rgba(255,255,255,0.1);
+        }
+        @keyframes keyFadeOut {
+            to { opacity: 0; pointer-events: none; }
+        }
+        #key-overlay.unlocked { animation: keyFadeOut 0.6s ease forwards; }
     </style>
 </head>
 <body>
+
+<!-- ЭКРАН АКТИВАЦИИ -->
+<div id="key-overlay">
+    <div class="key-box">
+        <div class="key-logo">КИБЕР<span>КАЛК</span></div>
+        <div class="key-sub">// СИСТЕМА ЗАЩИЩЕНА · ТРЕБУЕТСЯ КЛЮЧ</div>
+        <div class="key-label">// ВВЕДИТЕ КЛЮЧ АКТИВАЦИИ</div>
+        <div class="key-input-wrap">
+            <input id="key-input" type="password" placeholder="XXXX-XXXX-XXXX" maxlength="20" autocomplete="off" onkeydown="if(event.key==='Enter')checkKey()">
+        </div>
+        <div id="key-error"></div>
+        <button id="key-btn" onclick="checkKey()">[ АКТИВИРОВАТЬ ]</button>
+        <div class="key-footer">CYBER CALC 3000 · ЗАЩИЩЕНО · 2077</div>
+    </div>
+</div>
+
 <div class="scene">
 
     <!-- ЛЕВАЯ ПАНЕЛЬ -->
@@ -931,6 +1033,44 @@
 </div>
 <script>
 'use strict';
+
+// ═══════════════════════════════════════════════
+//  СИСТЕМА АКТИВАЦИИ
+// ═══════════════════════════════════════════════
+(function initKeyGuard() {
+    const _t = [67,89,66,69,82,45,51,48,48,48,45,50,48,55,55];
+    const _v = _t.map(c => String.fromCharCode(c)).join('');
+    const _k = 'ccActivated_v1';
+    const overlay = document.getElementById('key-overlay');
+    if (!overlay) return;
+    if (localStorage.getItem(_k) === btoa(_v)) {
+        overlay.style.display = 'none'; return;
+    }
+    window.checkKey = function() {
+        const inp = document.getElementById('key-input');
+        const err = document.getElementById('key-error');
+        const val = inp.value.trim().toUpperCase();
+        if (val === _v) {
+            inp.classList.remove('shake'); inp.classList.add('ok');
+            err.textContent = '// ДОСТУП РАЗРЕШЁН ✓';
+            err.style.color = 'var(--green)';
+            err.style.textShadow = '0 0 8px var(--green)';
+            localStorage.setItem(_k, btoa(_v));
+            setTimeout(() => {
+                overlay.classList.add('unlocked');
+                setTimeout(() => overlay.style.display = 'none', 650);
+            }, 700);
+        } else {
+            inp.classList.remove('shake', 'ok');
+            void inp.offsetWidth;
+            inp.classList.add('shake');
+            err.style.color = 'var(--red)';
+            err.style.textShadow = '0 0 8px var(--red)';
+            err.textContent = '// НЕВЕРНЫЙ КЛЮЧ — ДОСТУП ЗАПРЕЩЁН';
+            setTimeout(() => { inp.classList.remove('shake'); inp.value = ''; }, 500);
+        }
+    };
+})();
 
 // ═══════════════════════════════════════════════
 //  ЯЗЫК ИНТЕРФЕЙСА
