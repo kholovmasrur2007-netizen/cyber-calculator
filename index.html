@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КИБЕР КАЛК 3000</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+        :root {
+            --cyan: #00e5ff;
+            --magenta: #ff007f;
+            --gold: #ffb300;
+            --green: #00ff88;
+            --red: #ff4444;
+            --purple: #9d00ff;
+            --orange: #ff6500;
+            --dark: #03030a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Rajdhani', 'Share Tech Mono', monospace;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,229,255,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(255,0,127,0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                repeating-linear-gradient(60deg,  transparent, transparent 28px, rgba(0,229,255,0.022) 28px, rgba(0,229,255,0.022) 29px),
+                repeating-linear-gradient(-60deg, transparent, transparent 28px, rgba(0,229,255,0.022) 28px, rgba(0,229,255,0.022) 29px),
+                repeating-linear-gradient(0deg,   transparent, transparent 28px, rgba(157,0,255,0.012) 28px, rgba(157,0,255,0.012) 29px);
+            pointer-events: none;
+            animation: hexDrift 25s linear infinite;
+        }
+        @keyframes hexDrift {
+            from { background-position: 0 0, 0 0, 0 0; }
+            to   { background-position: 0 56px, 0 -56px, 56px 0; }
+        }
+
+        .scene { display: flex; align-items: center; }
+
+        /* ── БОКОВЫЕ ПАНЕЛИ ── */
+        .side-panel {
+            width: 100px; height: 620px;
+            background: linear-gradient(180deg, #0b0b1e, #080812);
+            display: flex; flex-direction: column;
+            align-items: center; padding: 14px 8px; gap: 10px;
+            overflow: hidden; position: relative;
+        }
+        .side-panel.left  { border-radius: 12px 0 0 12px; border: 2px solid rgba(0,229,255,0.2); border-right: none; }
+        .side-panel.right { border-radius: 0 12px 12px 0; border: 2px solid rgba(255,0,127,0.2); border-left: none; }
+
+        .data-stream { width: 2px; flex: 1; border-radius: 2px; position: relative; overflow: hidden; }
+        .side-panel.left  .data-stream { background: linear-gradient(180deg, transparent, rgba(0,229,255,0.3), transparent); }
+        .side-panel.right .data-stream { background: linear-gradient(180deg, transparent, rgba(255,0,127,0.3), transparent); }
+        .data-stream::after {
+            content: ''; position: absolute; width: 100%; height: 60px;
+            animation: dataFlow 2s linear infinite;
+        }
+        .side-panel.left  .data-stream::after { background: linear-gradient(180deg, transparent, #00e5ff, transparent); }
+        .side-panel.right .data-stream::after { background: linear-gradient(180deg, transparent, #ff007f, transparent); animation-duration: 2.5s; animation-direction: reverse; }
+        @keyframes dataFlow { 0%{top:-60px;} 100%{top:100%;} }
+
+        .indicator {
+            width: 76px; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(0,229,255,0.15); border-radius: 4px;
+            padding: 5px 6px; text-align: center;
+        }
+        .side-panel.right .indicator { border-color: rgba(255,0,127,0.15); }
+        .ind-label { font-size: 7px; letter-spacing: 2px; color: rgba(0,229,255,0.4); margin-bottom: 3px; }
+        .side-panel.right .ind-label { color: rgba(255,0,127,0.4); }
+        .ind-bar { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin-bottom: 2px; }
+        .ind-bar-fill { height: 100%; border-radius: 2px; transition: width 2s ease; }
+        .side-panel.left  .ind-bar-fill { background: linear-gradient(90deg, #00e5ff, #00ff88); }
+        .side-panel.right .ind-bar-fill { background: linear-gradient(90deg, #ff007f, #ffb300); }
+        .ind-val { font-size: 10px; }
+        .side-panel.left  .ind-val { color: #00e5ff; }
+        .side-panel.right .ind-val { color: #ff007f; }
+        .circuit-svg { opacity: 0.3; }
+
+        .pulse-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+        .side-panel.left  .pulse-dot { background: var(--cyan); box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan); }
+        .side-panel.right .pulse-dot { background: var(--magenta); box-shadow: 0 0 10px var(--magenta), 0 0 20px var(--magenta); animation-delay: 0.9s; }
+        @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.6);opacity:0.4;} }
+
+        /* ── КАЛЬКУЛЯТОР ── */
+        .calculator {
+            width: 390px; height: 620px;
+            background: linear-gradient(160deg, #0d0d22, #07070f 60%, #0b0b1d);
+            border-top: 2px solid rgba(0,229,255,0.25);
+            border-bottom: 2px solid rgba(255,0,127,0.2);
+            padding: 14px 15px 10px;
+            position: relative;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: calcBorder 10s ease-in-out infinite;
+        }
+        @keyframes calcBorder {
+            0%,100% { border-top-color:rgba(0,229,255,0.3);  border-bottom-color:rgba(255,0,127,0.2);  box-shadow:none; }
+            33%     { border-top-color:rgba(157,0,255,0.4);  border-bottom-color:rgba(0,229,255,0.25); box-shadow:0 0 40px rgba(157,0,255,0.06); }
+            66%     { border-top-color:rgba(255,101,0,0.35); border-bottom-color:rgba(157,0,255,0.3);  box-shadow:0 0 40px rgba(255,101,0,0.05); }
+        }
+        .top-bar {
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent 5%, rgba(0,229,255,0.6) 30%, rgba(0,229,255,0.9) 50%, rgba(0,229,255,0.6) 70%, transparent 95%);
+            box-shadow: 0 0 12px rgba(0,229,255,0.5);
+        }
+        .bot-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent 5%, rgba(255,0,127,0.4) 30%, rgba(255,0,127,0.7) 50%, rgba(255,0,127,0.4) 70%, transparent 95%);
+            box-shadow: 0 0 12px rgba(255,0,127,0.3);
+        }
+
+        /* Заголовок */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; flex-shrink: 0;
+        }
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px; font-weight: 900; color: #fff;
+            text-shadow: 0 0 20px rgba(0,229,255,0.8); letter-spacing: 3px;
+        }
+        .header h1 span.accent { color: var(--cyan); }
+        .lang-switcher { display:flex; gap:2px; margin-bottom:3px; }
+        .lang-btn { padding:2px 6px; background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:3px; color:rgba(255,255,255,0.28); font-family:'Share Tech Mono',monospace; font-size:8px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; }
+        .lang-btn.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,255,0.07); text-shadow:0 0 6px var(--cyan); }
+        .lang-btn:hover:not(.active) { border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); }
+        @keyframes titleFlicker {
+            0%,93%,100% { opacity:1; text-shadow:0 0 20px rgba(0,229,255,0.8); }
+            94% { opacity:0.5; text-shadow:0 0 50px rgba(0,229,255,1); }
+            95% { opacity:1; }
+            97% { opacity:0.7; text-shadow:0 0 60px rgba(157,0,255,1); }
+            98% { opacity:1; }
+        }
+        .header h1 { animation: titleFlicker 8s ease-in-out infinite; }
+        .online-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 8px; color: var(--green); letter-spacing: 2px;
+            text-shadow: 0 0 6px var(--green);
+        }
+        .online-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--green); box-shadow: 0 0 6px var(--green);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .ver { font-size: 7px; color: rgba(255,255,255,0.18); letter-spacing: 1px; text-align: right; }
+
+        /* Вкладки */
+        .tabs {
+            display: grid; grid-template-columns: repeat(6, 1fr);
+            gap: 3px; margin-bottom: 8px; flex-shrink: 0;
+        }
+        .tab {
+            padding: 6px 1px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 3px;
+            color: rgba(255,255,255,0.25);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .tab.active {
+            border-color: var(--cyan); color: var(--cyan);
+            background: rgba(0,229,255,0.06);
+            box-shadow: 0 0 10px rgba(0,229,255,0.12), inset 0 0 10px rgba(0,229,255,0.04);
+            text-shadow: 0 0 8px var(--cyan);
+        }
+        .tab.active::after {
+            content: ''; position: absolute;
+            bottom: 0; left: 10%; right: 10%; height: 1px;
+            background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+        }
+        .tab:hover:not(.active) { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.4); }
+
+        /* ── ДИСПЛЕЙ ── */
+        .display {
+            background: #000008;
+            border: 1px solid rgba(0,229,255,0.15);
+            border-radius: 6px;
+            padding: 8px 12px 6px;
+            margin-bottom: 8px;
+            position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
+        .display::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 40px;
+            background: linear-gradient(180deg, transparent, rgba(0,229,255,0.03), transparent);
+            animation: scanLine 4s ease-in-out infinite; pointer-events: none;
+        }
+        @keyframes scanLine { 0%{top:-40px;} 100%{top:100%;} }
+
+        .disp-top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1px;
+        }
+        .disp-label { font-size: 7px; color: rgba(0,229,255,0.2); letter-spacing: 3px; }
+        .disp-mode  { font-size: 7px; color: rgba(255,179,0,0.35); letter-spacing: 2px; }
+
+        /* Память и копирование */
+        .disp-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2px; min-height: 14px;
+        }
+        .mem-indicator {
+            font-size: 9px; color: var(--gold); letter-spacing: 1px;
+            text-shadow: 0 0 6px var(--gold); display: none;
+        }
+        .mem-indicator.visible { display: block; }
+        .copy-btn {
+            font-size: 8px; color: rgba(0,229,255,0.3); background: none;
+            border: none; cursor: pointer; letter-spacing: 1px;
+            transition: color 0.2s; padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .copy-btn:hover { color: var(--cyan); text-shadow: 0 0 6px var(--cyan); }
+
+        .history-line {
+            color: rgba(0,229,255,0.3); font-size: 10px;
+            text-align: right; min-height: 13px; letter-spacing: 1px;
+        }
+        .current {
+            color: #fff; font-size: 32px;
+            font-family: 'Orbitron', sans-serif; font-weight: 700;
+            text-align: right; letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0,229,255,0.6), 0 0 40px rgba(0,229,255,0.2);
+            word-break: break-all; line-height: 1;
+            transition: font-size 0.1s;
+        }
+        .current.error { color: var(--red); text-shadow: 0 0 20px rgba(255,68,68,0.8); font-size: 16px; letter-spacing: 1px; }
+        .current.pop { animation: numPop 0.15s ease-out; }
+        @keyframes numPop { 0%{text-shadow:0 0 40px rgba(0,229,255,1);} 100%{text-shadow:0 0 20px rgba(0,229,255,0.6);} }
+
+        /* Кнопки памяти под дисплеем */
+        .mem-row {
+            display: flex; gap: 4px;
+            margin-bottom: 6px; flex-shrink: 0;
+        }
+        .btn-mem {
+            flex: 1; height: 24px;
+            background: rgba(255,179,0,0.06);
+            border: 1px solid rgba(255,179,0,0.15);
+            border-radius: 3px;
+            color: rgba(255,179,0,0.6);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px; letter-spacing: 1px;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .btn-mem:hover { background: rgba(255,179,0,0.12); color: var(--gold); text-shadow: 0 0 6px var(--gold); }
+        .btn-mem:active { transform: scale(0.95); }
+        .btn-mem.mem-has { border-color: rgba(255,179,0,0.4); color: var(--gold); }
+
+        /* История вычислений */
+        .history-panel {
+            background: rgba(0,0,8,0.6);
+            border: 1px solid rgba(0,229,255,0.08);
+            border-radius: 4px;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            max-height: 60px; overflow-y: auto;
+            flex-shrink: 0; display: none;
+        }
+        .history-panel.has-items { display: block; }
+        .history-panel::-webkit-scrollbar { width: 2px; }
+        .history-panel::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.15); }
+        .hist-item {
+            font-size: 9px; color: rgba(255,255,255,0.25);
+            text-align: right; padding: 1px 0; letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer; transition: color 0.15s;
+        }
+        .hist-item:last-child { border-bottom: none; }
+        .hist-item:hover { color: rgba(0,229,255,0.6); }
+        .hist-item b { color: rgba(255,255,255,0.45); }
+
+        /* ── ЖУРНАЛ ── */
+        .journal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 8px; border-bottom: 1px solid rgba(0,229,255,0.1);
+            flex-shrink: 0;
+        }
+        .journal-title {
+            font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 2px;
+            color: var(--cyan); text-shadow: 0 0 8px var(--cyan);
+        }
+        .journal-clear {
+            font-size: 8px; letter-spacing: 1px; color: rgba(255,68,68,0.6);
+            background: transparent; border: 1px solid rgba(255,68,68,0.2);
+            border-radius: 3px; padding: 3px 8px; cursor: pointer; transition: all 0.2s;
+        }
+        .journal-clear:hover { color: #ff4444; border-color: rgba(255,68,68,0.5); background: rgba(255,68,68,0.08); }
+        .journal-list {
+            flex: 1; overflow-y: auto; padding: 4px 0;
+        }
+        .journal-list::-webkit-scrollbar { width: 2px; }
+        .journal-list::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 2px; }
+        .journal-entry {
+            padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer; transition: background 0.15s;
+        }
+        .journal-entry:last-child { border-bottom: none; }
+        .journal-entry:hover { background: rgba(0,229,255,0.05); }
+        .journal-ts {
+            font-size: 8px; color: rgba(0,229,255,0.35); letter-spacing: 1px; margin-bottom: 2px;
+        }
+        .journal-expr {
+            font-size: 12px; color: rgba(255,255,255,0.7); letter-spacing: 0.5px;
+            text-align: right;
+        }
+        .journal-expr .jeq { color: var(--cyan); }
+        .journal-expr .jres { color: #fff; font-weight: bold; text-shadow: 0 0 8px rgba(0,229,255,0.4); }
+        .journal-empty {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; gap: 8px;
+        }
+        .journal-empty-icon { font-size: 32px; opacity: 0.15; }
+        .journal-empty-txt { font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.12); }
+        .journal-mode-badge {
+            font-size: 7px; letter-spacing: 1px; color: rgba(255,179,0,0.4);
+            border: 1px solid rgba(255,179,0,0.15); border-radius: 2px; padding: 1px 4px;
+            margin-left: 6px; vertical-align: middle;
+        }
+
+        /* ── ПАНЕЛИ ── */
+        .panel { display: none; flex: 1; overflow: hidden; }
+        .panel.active { display: flex; flex-direction: column; }
+
+        /* ── КНОПКИ ── */
+        .btn-grid { display: grid; gap: 5px; }
+        .basic-grid { grid-template-columns: repeat(4, 1fr); }
+        .eng-grid   { grid-template-columns: repeat(4, 1fr); }
+
+        .btn {
+            position: relative; padding: 0; height: 48px;
+            border: none; border-radius: 5px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; overflow: hidden;
+            transition: transform 0.08s, box-shadow 0.1s;
+            user-select: none; letter-spacing: 1px;
+        }
+        .btn::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.07), transparent);
+            border-radius: 5px 5px 0 0; pointer-events: none;
+        }
+        .btn::after {
+            content: ''; position: absolute;
+            bottom: 0; left: 0; right: 0; height: 2px;
+            border-radius: 0 0 5px 5px; pointer-events: none;
+        }
+        .btn:active { transform: scale(0.94) translateY(1px); }
+
+        .btn-num   { background: linear-gradient(180deg,#141428,#0d0d20); color:rgba(255,255,255,0.85); box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.05); }
+        .btn-num::after { background: rgba(255,255,255,0.05); }
+        .btn-num:hover { background: linear-gradient(180deg,#1a1a35,#121225); color:#fff; }
+
+        .btn-op    { background: linear-gradient(180deg,rgba(255,0,127,0.2),rgba(255,0,127,0.12)); color:#ff6eb0; box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(255,0,127,0.25),0 0 12px rgba(255,0,127,0.08); text-shadow:0 0 8px rgba(255,0,127,0.5); font-size:17px; }
+        .btn-op::after { background: rgba(255,0,127,0.3); }
+        .btn-op:hover { background: linear-gradient(180deg,rgba(255,0,127,0.3),rgba(255,0,127,0.2)); box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(255,0,127,0.4),0 0 20px rgba(255,0,127,0.2); }
+
+        .btn-eq    { background: linear-gradient(180deg,rgba(0,229,255,0.25),rgba(0,229,255,0.15)); color:var(--cyan); box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(0,229,255,0.35),0 0 16px rgba(0,229,255,0.12); text-shadow:0 0 12px var(--cyan); font-size:19px; }
+        .btn-eq::after { background: rgba(0,229,255,0.4); }
+        .btn-eq:hover { background: linear-gradient(180deg,rgba(0,229,255,0.35),rgba(0,229,255,0.25)); }
+
+        .btn-clear { background: linear-gradient(180deg,rgba(255,50,50,0.2),rgba(200,20,20,0.12)); color:#ff5555; box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(255,50,50,0.25); text-shadow:0 0 8px rgba(255,80,80,0.5); }
+        .btn-clear::after { background: rgba(255,50,50,0.3); }
+        .btn-clear:hover { background: linear-gradient(180deg,rgba(255,50,50,0.3),rgba(200,20,20,0.2)); }
+
+        .btn-special { background: linear-gradient(180deg,rgba(0,255,136,0.1),rgba(0,200,100,0.06)); color:#44ffaa; box-shadow:0 3px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(0,255,136,0.15); font-size:11px; }
+        .btn-special::after { background: rgba(0,255,136,0.2); }
+        .btn-special:hover { background: linear-gradient(180deg,rgba(0,255,136,0.18),rgba(0,200,100,0.12)); }
+
+        .btn-func  { height: 38px; background: linear-gradient(180deg,rgba(150,60,255,0.18),rgba(100,20,200,0.1)); color:#cc88ff; box-shadow:0 2px 0 rgba(0,0,0,0.6),0 0 0 1px rgba(150,60,255,0.2); font-size:11px; text-shadow:0 0 6px rgba(180,80,255,0.4); }
+        .btn-func::after { background: rgba(150,60,255,0.25); }
+        .btn-func:hover { background: linear-gradient(180deg,rgba(150,60,255,0.28),rgba(100,20,200,0.2)); }
+
+        .btn-func.active-mode { background: linear-gradient(180deg,rgba(0,229,255,0.2),rgba(0,180,220,0.12)); color:var(--cyan); border: 1px solid rgba(0,229,255,0.3); text-shadow:0 0 8px var(--cyan); }
+
+        .btn-wide { grid-column: span 2; }
+
+        /* ── ВОЗРАСТ ── */
+        .age-wrap { display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; }
+        .age-field label { display:block; font-size:8px; letter-spacing:3px; color:rgba(0,229,255,0.4); margin-bottom:4px; text-transform:uppercase; }
+        .age-field input {
+            width:100%; padding:9px 12px;
+            background:#000008; border:1px solid rgba(0,229,255,0.15);
+            border-radius:4px; color:var(--cyan);
+            font-family:'Share Tech Mono',monospace; font-size:13px;
+            outline:none; transition:border-color 0.2s;
+        }
+        .age-field input:focus { border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,255,0.2); }
+        .age-field input::-webkit-calendar-picker-indicator { filter:invert(0.8) sepia(1) saturate(5) hue-rotate(170deg); cursor:pointer; }
+        .age-result { background:#000008; border:1px solid rgba(0,229,255,0.1); border-radius:4px; padding:12px 14px; flex:1; }
+        .age-result .result-title { font-size:7px; letter-spacing:3px; color:rgba(0,229,255,0.3); margin-bottom:8px; }
+        .age-result .big { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; color:#fff; text-shadow:0 0 15px rgba(0,229,255,0.6); display:block; margin-bottom:8px; line-height:1.4; }
+        .age-result .row { display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.3); border-bottom:1px solid rgba(255,255,255,0.04); padding:3px 0; }
+        .age-result .row span:last-child { color:#ff6eb0; text-shadow:0 0 6px rgba(255,0,127,0.4); }
+        .age-result .placeholder { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; height:80px; }
+
+        /* ── КОНВЕРТЕР ── */
+        .conv-grid {
+            display:grid; grid-template-columns:repeat(3, 1fr);
+            gap:8px; overflow-y:auto; flex:1; padding:2px;
+        }
+        .conv-grid::-webkit-scrollbar { width:3px; }
+        .conv-grid::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.2); border-radius:2px; }
+        .conv-card {
+            background:linear-gradient(160deg,#0f0f26,#0a0a1a);
+            border:1px solid rgba(255,255,255,0.07);
+            border-radius:8px; padding:12px 8px 10px;
+            display:flex; flex-direction:column; align-items:center; gap:7px;
+            cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+        }
+        .conv-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,229,255,0.3),transparent); opacity:0; transition:opacity 0.2s; }
+        .conv-card:hover { border-color:rgba(0,229,255,0.3); background:linear-gradient(160deg,#121230,#0d0d22); transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+        .conv-card:hover::before { opacity:1; }
+        .conv-card:active { transform:scale(0.96); }
+        .conv-icon { width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(0,229,255,0.08); border:1px solid rgba(0,229,255,0.2); font-size:18px; transition:all 0.2s; }
+        .conv-card:hover .conv-icon { background:rgba(0,229,255,0.15); box-shadow:0 0 15px rgba(0,229,255,0.2); }
+        .conv-name { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.6); text-align:center; text-transform:uppercase; line-height:1.3; }
+
+        .conv-view { display:none; flex-direction:column; flex:1; gap:8px; overflow-y:auto; }
+        .conv-view.active { display:flex; }
+        .conv-back { display:flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.2); border-radius:4px; color:var(--cyan); font-size:10px; letter-spacing:2px; cursor:pointer; transition:all 0.2s; font-family:'Share Tech Mono',monospace; flex-shrink:0; }
+        .conv-back:hover { background:rgba(0,229,255,0.12); }
+        .conv-title { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:#fff; letter-spacing:2px; text-shadow:0 0 15px rgba(0,229,255,0.5); flex-shrink:0; }
+        .conv-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; flex-shrink:0; }
+        .conv-input-wrap { display:flex; flex-direction:column; gap:4px; }
+        .conv-input-wrap label { display:block; font-size:8px; letter-spacing:2px; color:rgba(0,229,255,0.4); text-transform:uppercase; }
+        .conv-input-wrap input, .conv-input-wrap select {
+            width:100%; padding:8px 10px;
+            background:#000008; border:1px solid rgba(0,229,255,0.15);
+            border-radius:4px; color:var(--cyan);
+            font-family:'Share Tech Mono',monospace; font-size:12px; outline:none;
+            transition:border-color 0.2s;
+        }
+        .conv-input-wrap select { color:rgba(255,255,255,0.7); font-size:11px; }
+        .conv-input-wrap input:focus, .conv-input-wrap select:focus { border-color:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,0.15); }
+        .conv-input-wrap select option { background:#0a0a1a; color:#fff; }
+        .conv-result-box { background:#000008; border:1px solid rgba(0,229,255,0.1); border-radius:6px; padding:12px 14px; flex:1; }
+        .conv-result-label { font-size:7px; letter-spacing:3px; color:rgba(0,229,255,0.3); margin-bottom:8px; }
+        .conv-result-val { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:700; color:#fff; text-shadow:0 0 15px rgba(0,229,255,0.6); word-break:break-all; line-height:1.3; }
+        .conv-result-detail { margin-top:8px; font-size:10px; color:rgba(255,255,255,0.25); line-height:1.8; }
+        .conv-result-detail b { color:#ff6eb0; }
+        .bmi-bar-wrap { margin-top:10px; }
+        .bmi-bar { height:6px; border-radius:3px; background:linear-gradient(90deg,#00ff88,#ffb300,#ff4444); position:relative; }
+        .bmi-marker { position:absolute; top:-4px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 8px var(--cyan); transform:translateX(-50%); transition:left 0.4s; }
+
+        /* ── ПРОГРАММИСТ ── */
+        .prog-display { background:#000008; border:1px solid rgba(0,229,255,0.15); border-radius:6px; padding:8px 12px; margin-bottom:7px; flex-shrink:0; }
+        .prog-op-indicator { font-size:8px; color:rgba(255,179,0,0.5); letter-spacing:2px; margin-bottom:4px; min-height:12px; text-align:right; }
+        .prog-row { display:flex; justify-content:space-between; align-items:center; padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:background 0.15s; border-radius:3px; }
+        .prog-row:last-child { border-bottom:none; }
+        .prog-row:hover { background:rgba(0,229,255,0.05); }
+        .prog-row.active-base .prog-base-label { color:var(--cyan); text-shadow:0 0 8px var(--cyan); }
+        .prog-row.active-base .prog-base-val   { color:#fff; text-shadow:0 0 10px rgba(0,229,255,0.5); font-size:14px; }
+        .prog-base-label { font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.2); width:36px; flex-shrink:0; }
+        .prog-base-val { font-family:'Orbitron',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); text-align:right; word-break:break-all; flex:1; letter-spacing:1px; }
+
+        .base-switcher { display:flex; gap:4px; margin-bottom:7px; flex-shrink:0; }
+        .base-btn { flex:1; padding:5px 4px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:3px; color:rgba(255,255,255,0.3); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; }
+        .base-btn.active { background:rgba(0,229,255,0.12); border-color:var(--cyan); color:var(--cyan); text-shadow:0 0 8px var(--cyan); }
+
+        .prog-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; flex:1; }
+        .btn-hex { height:40px; background:linear-gradient(180deg,rgba(255,179,0,0.15),rgba(200,130,0,0.08)); border:1px solid rgba(255,179,0,0.25); color:#ffb300; font-size:13px; font-weight:bold; box-shadow:0 2px 0 rgba(0,0,0,0.5); text-shadow:0 0 8px rgba(255,179,0,0.5); }
+        .btn-hex::after { background:rgba(255,179,0,0.2); }
+        .btn-hex:hover { background:linear-gradient(180deg,rgba(255,179,0,0.25),rgba(200,130,0,0.15)); }
+        .btn-hex:disabled, .btn-num:disabled { opacity:0.15; cursor:not-allowed; transform:none !important; }
+        .btn-bit { height:40px; background:linear-gradient(180deg,rgba(0,255,136,0.1),rgba(0,180,90,0.06)); border:1px solid rgba(0,255,136,0.2); color:#00ff88; font-size:10px; box-shadow:0 2px 0 rgba(0,0,0,0.5); text-shadow:0 0 6px rgba(0,255,136,0.4); }
+        .btn-bit::after { background:rgba(0,255,136,0.15); }
+        .btn-bit:hover { background:linear-gradient(180deg,rgba(0,255,136,0.18),rgba(0,180,90,0.12)); }
+        .btn-spec { height:40px; background:linear-gradient(180deg,rgba(0,255,136,0.08),rgba(0,180,80,0.05)); border:1px solid rgba(0,255,136,0.15); color:#44ffaa; font-size:11px; box-shadow:0 2px 0 rgba(0,0,0,0.5); }
+        .btn-spec::after { background:rgba(0,255,136,0.15); }
+        .btn-spec:hover { background:linear-gradient(180deg,rgba(0,255,136,0.15),rgba(0,180,80,0.1)); }
+        .prog-num { height:40px; }
+        .prog-op  { height:40px; }
+        .prog-eq  { height:40px; }
+        .prog-clr { height:40px; }
+
+        /* Нижняя строка */
+        .status-row { display:flex; justify-content:space-between; margin-top:6px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.04); font-size:7px; letter-spacing:2px; color:rgba(255,255,255,0.1); flex-shrink:0; }
+
+        .scroll-panel { overflow-y:auto; flex:1; }
+        .scroll-panel::-webkit-scrollbar { width:2px; }
+        .scroll-panel::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.15); }
+
+        /* ── RESULT FLASH (3 сек после =) ── */
+        @keyframes displayFlash {
+            0%   { border-color:rgba(0,229,255,0.15); box-shadow:none; }
+            18%  { border-color:var(--purple); box-shadow:0 0 35px rgba(157,0,255,0.6),inset 0 0 25px rgba(157,0,255,0.12); }
+            42%  { border-color:var(--orange); box-shadow:0 0 35px rgba(255,101,0,0.6), inset 0 0 25px rgba(255,101,0,0.12); }
+            66%  { border-color:var(--green);  box-shadow:0 0 35px rgba(0,255,136,0.5), inset 0 0 25px rgba(0,255,136,0.1); }
+            85%  { border-color:var(--cyan);   box-shadow:0 0 20px rgba(0,229,255,0.4); }
+            100% { border-color:rgba(0,229,255,0.15); box-shadow:none; }
+        }
+        @keyframes numFlash {
+            0%   { color:#fff;    text-shadow:0 0 20px rgba(0,229,255,0.6); }
+            18%  { color:#cc88ff; text-shadow:0 0 60px rgba(157,0,255,1),0 0 120px rgba(157,0,255,0.4); }
+            42%  { color:#ff9944; text-shadow:0 0 60px rgba(255,101,0,1), 0 0 120px rgba(255,101,0,0.4); }
+            66%  { color:#00ff88; text-shadow:0 0 60px rgba(0,255,136,1), 0 0 120px rgba(0,255,136,0.4); }
+            85%  { color:var(--cyan); text-shadow:0 0 30px rgba(0,229,255,0.8); }
+            100% { color:#fff;    text-shadow:0 0 20px rgba(0,229,255,0.6); }
+        }
+        .display.result-flash  { animation: displayFlash 3s ease-in-out forwards !important; }
+        .current.result-flash  { animation: numFlash 3s ease-in-out forwards !important; }
+
+        /* ── УГЛЫ БОКОВЫХ ПАНЕЛЕЙ ── */
+        .sp-corner { width:100%; text-align:center; flex-shrink:0; padding:2px 4px; }
+        .sp-corner.bottom { margin-top:auto; }
+        .sp-corner-label {
+            font-family:'Rajdhani',sans-serif; font-size:7px; letter-spacing:2px;
+            text-transform:uppercase; opacity:0.45; margin-bottom:3px;
+        }
+        .side-panel.left  .sp-corner-label { color:var(--cyan); }
+        .side-panel.right .sp-corner-label { color:var(--magenta); }
+        .sp-corner-value {
+            font-family:'Orbitron',sans-serif; font-weight:700;
+            font-size:13px; letter-spacing:1px; line-height:1.2;
+        }
+        .side-panel.left  .sp-corner-value { color:var(--cyan);    text-shadow:0 0 12px var(--cyan); }
+        .side-panel.right .sp-corner-value { color:var(--magenta); text-shadow:0 0 12px var(--magenta); }
+        .sp-clock { font-size:9px !important; letter-spacing:0.5px !important; }
+        .sp-date  { font-size:8px !important; letter-spacing:0.5px !important; }
+
+        @keyframes glitch {
+            0%,89%,100% { clip-path:none; transform:none; color:#fff; }
+            90%  { clip-path:polygon(0 15%,100% 15%,100% 35%,0 35%); transform:translateX(-4px); color:#ff007f; }
+            91%  { clip-path:polygon(0 55%,100% 55%,100% 75%,0 75%); transform:translateX(4px); }
+            92%  { clip-path:none; transform:none; }
+            94%  { clip-path:polygon(0 5%,100% 5%,100% 20%,0 20%); transform:translateX(-2px) skewX(-2deg); color:#00e5ff; }
+            95%  { clip-path:none; transform:none; color:#fff; }
+        }
+        .current { animation: glitch 12s infinite; }
+        .current.error { animation: none; }
+        .panel.active { animation: panelIn 0.2s ease-out; }
+        @keyframes panelIn { from{opacity:0;transform:translateY(5px);} to{opacity:1;transform:translateY(0);} }
+        .journal-search { padding:6px 8px; border-bottom:1px solid rgba(0,229,255,0.08); flex-shrink:0; }
+        .journal-search input { width:100%; padding:5px 10px; background:rgba(0,0,8,0.8); border:1px solid rgba(0,229,255,0.15); border-radius:3px; color:var(--cyan); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; outline:none; transition:border-color 0.2s; }
+        .journal-search input:focus { border-color:var(--cyan); box-shadow:0 0 8px rgba(0,229,255,0.15); }
+        .journal-search input::placeholder { color:rgba(0,229,255,0.25); }
+        .wordsize-row { display:flex; gap:3px; margin-bottom:5px; flex-shrink:0; }
+        .ws-btn { flex:1; padding:4px 2px; font-size:9px; letter-spacing:1px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,179,0,0.12); border-radius:3px; color:rgba(255,179,0,0.35); font-family:'Share Tech Mono',monospace; cursor:pointer; transition:all 0.2s; }
+        .ws-btn.active { background:rgba(255,179,0,0.1); border-color:rgba(255,179,0,0.5); color:var(--gold); text-shadow:0 0 6px var(--gold); }
+        .ws-btn:hover { color:var(--gold); }
+        .prog-popcount { font-size:8px; color:rgba(0,255,136,0.4); letter-spacing:1px; text-align:right; margin-bottom:2px; min-height:12px; }
+    </style>
+</head>
+<body>
+<div class="scene">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ -->
+    <div class="side-panel left">
+        <!-- ЛЕВЫЙ ВЕРХ: температура на улице -->
+        <div class="sp-corner top">
+            <div class="sp-corner-label" data-i18n="sp_street">УЛИЦА</div>
+            <div class="sp-corner-value" id="outdoor-temp">--°</div>
+        </div>
+        <div class="pulse-dot"></div>
+        <div class="indicator">
+            <div class="ind-label">CPU</div>
+            <div class="ind-bar"><div class="ind-bar-fill" id="cpu-bar" style="width:0%"></div></div>
+            <div class="ind-val" id="cpu-val">0%</div>
+        </div>
+        <svg class="circuit-svg" width="76" height="110" viewBox="0 0 76 110">
+            <line x1="8" y1="10" x2="8" y2="100" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="8" y1="28" x2="38" y2="28" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="38" y1="28" x2="38" y2="48" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="38" y1="48" x2="68" y2="48" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="8" y1="65" x2="52" y2="65" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="52" y1="65" x2="52" y2="82" stroke="#00e5ff" stroke-width="1.5"/>
+            <line x1="8" y1="82" x2="52" y2="82" stroke="#00e5ff" stroke-width="1.5"/>
+            <circle cx="8" cy="28" r="3" fill="#00e5ff"/>
+            <circle cx="38" cy="48" r="3" fill="#00e5ff"/>
+            <circle cx="52" cy="65" r="3" fill="#00e5ff"/>
+            <rect x="33" y="23" width="10" height="10" rx="2" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+            <rect x="48" y="43" width="10" height="10" rx="2" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+            <circle cx="8" cy="65" r="5" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+        </svg>
+        <div class="data-stream"></div>
+        <div class="indicator">
+            <div class="ind-label">MEM</div>
+            <div class="ind-bar"><div class="ind-bar-fill" id="mem-bar" style="width:0%"></div></div>
+            <div class="ind-val" id="mem-val">0%</div>
+        </div>
+        <!-- ЛЕВЫЙ НИЗ: температура компьютера (симуляция) -->
+        <div class="sp-corner bottom">
+            <div class="sp-corner-label" data-i18n="sp_system">СИСТЕМА</div>
+            <div class="sp-corner-value" id="cpu-temp-val">--°C</div>
+        </div>
+    </div>
+
+    <!-- КАЛЬКУЛЯТОР -->
+    <div class="calculator">
+        <div class="top-bar"></div>
+        <div class="bot-bar"></div>
+
+        <div class="header">
+            <h1><span data-i18n="title1">КИБЕР</span><span class="accent" data-i18n="title2">КАЛК</span></h1>
+            <div>
+                <div class="lang-switcher">
+                    <button class="lang-btn active" data-lang="ru" onclick="setLang('ru')">РУС</button>
+                    <button class="lang-btn" data-lang="en" onclick="setLang('en')">ENG</button>
+                    <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中文</button>
+                </div>
+                <div class="online-badge"><div class="online-dot"></div><span data-i18n="badge_online">В СЕТИ</span></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('basic',this)" data-i18n="tab_basic">ОСНОВНОЙ</button>
+            <button class="tab" onclick="switchTab('engineer',this)" data-i18n="tab_eng">ИНЖЕНЕР</button>
+            <button class="tab" onclick="switchTab('age',this)" data-i18n="tab_age">ВОЗРАСТ</button>
+            <button class="tab" onclick="switchTab('convert',this)" data-i18n="tab_conv">КОНВЕРТ</button>
+            <button class="tab" onclick="switchTab('prog',this)" data-i18n="tab_prog">ПРОГР</button>
+            <button class="tab" onclick="switchTab('journal',this)" data-i18n="tab_journal">ЖУРНАЛ</button>
+        </div>
+
+        <!-- ДИСПЛЕЙ -->
+        <div class="display" id="main-display">
+            <div class="disp-top">
+                <div class="disp-label" data-i18n="disp_label">// РЕЗУЛЬТАТ</div>
+                <div class="disp-mode" id="disp-mode">ОСНОВНОЙ РЕЖИМ</div>
+            </div>
+            <div class="disp-meta">
+                <span class="mem-indicator" id="mem-indicator">M: <span id="mem-display">0</span></span>
+                <button class="copy-btn" onclick="copyResult()" data-i18n="copy_btn">[ КОПИРОВАТЬ ]</button>
+            </div>
+            <div class="history-line" id="history"></div>
+            <div class="current" id="display">0</div>
+        </div>
+
+        <!-- ПАМЯТЬ -->
+        <div class="mem-row">
+            <button class="btn-mem" onclick="memClear()" data-i18n-title="mem_mc" title="Очистить память">MC</button>
+            <button class="btn-mem" onclick="memRead()"  data-i18n-title="mem_mr" title="Вспомнить из памяти">MR</button>
+            <button class="btn-mem" onclick="memAdd()"   data-i18n-title="mem_mplus" title="Добавить к памяти">M+</button>
+            <button class="btn-mem" onclick="memSub()"   data-i18n-title="mem_mminus" title="Вычесть из памяти">M−</button>
+        </div>
+
+        <!-- ИСТОРИЯ -->
+        <div class="history-panel" id="history-panel"></div>
+
+        <!-- ОСНОВНОЙ -->
+        <div class="panel active" id="panel-basic">
+            <div class="btn-grid basic-grid">
+                <button class="btn btn-clear"   onclick="clearAll()">AC</button>
+                <button class="btn btn-special"  onclick="toggleSign()">+/−</button>
+                <button class="btn btn-special"  onclick="percent()">%</button>
+                <button class="btn btn-op"       onclick="setOp('/')">÷</button>
+                <button class="btn btn-num" onclick="numInput('7')">7</button>
+                <button class="btn btn-num" onclick="numInput('8')">8</button>
+                <button class="btn btn-num" onclick="numInput('9')">9</button>
+                <button class="btn btn-op"  onclick="setOp('*')">×</button>
+                <button class="btn btn-num" onclick="numInput('4')">4</button>
+                <button class="btn btn-num" onclick="numInput('5')">5</button>
+                <button class="btn btn-num" onclick="numInput('6')">6</button>
+                <button class="btn btn-op"  onclick="setOp('-')">−</button>
+                <button class="btn btn-num" onclick="numInput('1')">1</button>
+                <button class="btn btn-num" onclick="numInput('2')">2</button>
+                <button class="btn btn-num" onclick="numInput('3')">3</button>
+                <button class="btn btn-op"  onclick="setOp('+')">+</button>
+                <button class="btn btn-num btn-wide" onclick="numInput('0')">0</button>
+                <button class="btn btn-num" onclick="inputDot()">.</button>
+                <button class="btn btn-eq"  onclick="calculate()">=</button>
+            </div>
+        </div>
+
+        <!-- ИНЖЕНЕР -->
+        <div class="panel" id="panel-engineer">
+            <div class="scroll-panel">
+                <div class="btn-grid eng-grid">
+                    <!-- DEG/RAD + тип функций -->
+                    <button class="btn btn-func active-mode" id="btn-degrad" onclick="toggleAngle()" title="Переключить градусы/радианы">ГРД</button>
+                    <button class="btn btn-func" onclick="engFunc('asin')">sin⁻¹</button>
+                    <button class="btn btn-func" onclick="engFunc('acos')">cos⁻¹</button>
+                    <button class="btn btn-func" onclick="engFunc('atan')">tan⁻¹</button>
+
+                    <button class="btn btn-func" onclick="engFunc('sin')">SIN</button>
+                    <button class="btn btn-func" onclick="engFunc('cos')">COS</button>
+                    <button class="btn btn-func" onclick="engFunc('tan')">TAN</button>
+                    <button class="btn btn-func" onclick="engFunc('sqrt')">√x</button>
+
+                    <button class="btn btn-func" onclick="engFunc('log')">LOG</button>
+                    <button class="btn btn-func" onclick="engFunc('ln')">LN</button>
+                    <button class="btn btn-func" onclick="engFunc('pow2')">x²</button>
+                    <button class="btn btn-func" onclick="engFunc('pow3')">x³</button>
+
+                    <button class="btn btn-func" onclick="engFunc('inv')">1/x</button>
+                    <button class="btn btn-func" onclick="engFunc('fact')">n!</button>
+                    <button class="btn btn-func" onclick="engFunc('abs')">|x|</button>
+                    <button class="btn btn-func" onclick="engFunc('pi')">π</button>
+
+                    <button class="btn btn-func" onclick="engFunc('e')">e</button>
+                    <button class="btn btn-func" onclick="setOp('^')">xʸ</button>
+                    <button class="btn btn-func" onclick="engFunc('cbrt')">∛x</button>
+                    <button class="btn btn-func" onclick="engFunc('deg')">°→R</button>
+
+                    <button class="btn btn-func" onclick="engFunc('sinh')">sinh</button>
+                    <button class="btn btn-func" onclick="engFunc('cosh')">cosh</button>
+                    <button class="btn btn-func" onclick="engFunc('tanh')">tanh</button>
+                    <button class="btn btn-func" onclick="engFunc('exp')">eˣ</button>
+
+                    <button class="btn btn-clear"   onclick="clearAll()">AC</button>
+                    <button class="btn btn-special"  onclick="toggleSign()">+/−</button>
+                    <button class="btn btn-op"       onclick="setOp('/')">÷</button>
+                    <button class="btn btn-op"       onclick="setOp('*')">×</button>
+
+                    <button class="btn btn-num" onclick="numInput('7')">7</button>
+                    <button class="btn btn-num" onclick="numInput('8')">8</button>
+                    <button class="btn btn-num" onclick="numInput('9')">9</button>
+                    <button class="btn btn-op"  onclick="setOp('-')">−</button>
+
+                    <button class="btn btn-num" onclick="numInput('4')">4</button>
+                    <button class="btn btn-num" onclick="numInput('5')">5</button>
+                    <button class="btn btn-num" onclick="numInput('6')">6</button>
+                    <button class="btn btn-op"  onclick="setOp('+')">+</button>
+
+                    <button class="btn btn-num" onclick="numInput('1')">1</button>
+                    <button class="btn btn-num" onclick="numInput('2')">2</button>
+                    <button class="btn btn-num" onclick="numInput('3')">3</button>
+                    <button class="btn btn-eq"  onclick="calculate()">=</button>
+
+                    <button class="btn btn-num btn-wide" onclick="numInput('0')">0</button>
+                    <button class="btn btn-num" onclick="inputDot()">.</button>
+                    <button class="btn btn-special" onclick="deleteLast()">⌫</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВОЗРАСТ -->
+        <div class="panel" id="panel-age">
+            <div class="age-wrap">
+                <div class="age-field">
+                    <label data-i18n="age_birth_lbl">// дата рождения</label>
+                    <input type="date" id="birthdate" onchange="calcAge()">
+                </div>
+                <div class="age-field">
+                    <label data-i18n="age_target_lbl">// на какую дату считать (необязательно)</label>
+                    <input type="date" id="targetdate" onchange="calcAge()">
+                </div>
+                <div class="age-result" id="age-result">
+                    <div class="placeholder" data-i18n="age_ph">// ВВЕДИТЕ ДАТУ РОЖДЕНИЯ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- КОНВЕРТЕР -->
+        <div class="panel" id="panel-convert">
+            <div class="conv-grid" id="conv-grid">
+                <div class="conv-card" onclick="openConverter('length')"><div class="conv-icon">📏</div><div class="conv-name" data-i18n="conv_length">Длина</div></div>
+                <div class="conv-card" onclick="openConverter('mass')"><div class="conv-icon">⚖️</div><div class="conv-name" data-i18n="conv_mass">Масса</div></div>
+                <div class="conv-card" onclick="openConverter('temperature')"><div class="conv-icon">🌡️</div><div class="conv-name" data-i18n="conv_temp">Температура</div></div>
+                <div class="conv-card" onclick="openConverter('speed')"><div class="conv-icon">🏎️</div><div class="conv-name" data-i18n="conv_speed">Скорость</div></div>
+                <div class="conv-card" onclick="openConverter('area')"><div class="conv-icon">⬛</div><div class="conv-name" data-i18n="conv_area">Площадь</div></div>
+                <div class="conv-card" onclick="openConverter('volume')"><div class="conv-icon">🧪</div><div class="conv-name" data-i18n="conv_volume">Объём</div></div>
+                <div class="conv-card" onclick="openConverter('time')"><div class="conv-icon">⏱️</div><div class="conv-name" data-i18n="conv_time">Время</div></div>
+                <div class="conv-card" onclick="openConverter('currency')"><div class="conv-icon">💱</div><div class="conv-name" data-i18n="conv_currency">Валюта</div></div>
+                <div class="conv-card" onclick="openConverter('numeral')"><div class="conv-icon">🔢</div><div class="conv-name" data-i18n="conv_numeral">Системы счисления</div></div>
+                <div class="conv-card" onclick="openConverter('bmi')"><div class="conv-icon">🏃</div><div class="conv-name" data-i18n="conv_bmi">ИМТ</div></div>
+                <div class="conv-card" onclick="openConverter('tax')"><div class="conv-icon">🧾</div><div class="conv-name" data-i18n="conv_tax">Налог с дохода</div></div>
+                <div class="conv-card" onclick="openConverter('mortgage')"><div class="conv-icon">🏠</div><div class="conv-name" data-i18n="conv_mortgage">Ипотека</div></div>
+            </div>
+            <div class="conv-view" id="conv-view">
+                <button class="conv-back" onclick="closeConverter()" data-i18n="conv_back">← НАЗАД</button>
+                <div class="conv-title" id="conv-title"></div>
+                <div id="conv-body"></div>
+            </div>
+        </div>
+
+        <!-- ПРОГРАММИСТ -->
+        <div class="panel" id="panel-prog">
+            <div class="prog-display">
+                <div class="prog-op-indicator" id="prog-op-ind"></div>
+                <div class="prog-popcount" id="prog-popcount"></div>
+                <div class="prog-row active-base" id="prow-dec" onclick="setBase('DEC')">
+                    <span class="prog-base-label">DEC</span>
+                    <span class="prog-base-val" id="pval-dec">0</span>
+                </div>
+                <div class="prog-row" id="prow-hex" onclick="setBase('HEX')">
+                    <span class="prog-base-label">HEX</span>
+                    <span class="prog-base-val" id="pval-hex">0</span>
+                </div>
+                <div class="prog-row" id="prow-oct" onclick="setBase('OCT')">
+                    <span class="prog-base-label">OCT</span>
+                    <span class="prog-base-val" id="pval-oct">0</span>
+                </div>
+                <div class="prog-row" id="prow-bin" onclick="setBase('BIN')">
+                    <span class="prog-base-label">BIN</span>
+                    <span class="prog-base-val" id="pval-bin">0</span>
+                </div>
+            </div>
+            <div class="scroll-panel">
+            <div class="base-switcher">
+                <button class="base-btn active" id="base-DEC" onclick="setBase('DEC')">DEC</button>
+                <button class="base-btn" id="base-HEX" onclick="setBase('HEX')">HEX</button>
+                <button class="base-btn" id="base-OCT" onclick="setBase('OCT')">OCT</button>
+                <button class="base-btn" id="base-BIN" onclick="setBase('BIN')">BIN</button>
+            </div>
+            <div class="wordsize-row">
+                <button class="ws-btn" id="ws-BYTE" onclick="setWordSize('BYTE')">BYTE 8</button>
+                <button class="ws-btn" id="ws-WORD" onclick="setWordSize('WORD')">WORD 16</button>
+                <button class="ws-btn active" id="ws-DWORD" onclick="setWordSize('DWORD')">DWORD 32</button>
+            </div>
+            <div class="prog-grid">
+                <button class="btn btn-bit" onclick="progBit('AND')">AND</button>
+                <button class="btn btn-bit" onclick="progBit('OR')">OR</button>
+                <button class="btn btn-bit" onclick="progBit('XOR')">XOR</button>
+                <button class="btn btn-bit" onclick="progBit('NOT')">NOT</button>
+
+                <button class="btn btn-bit" onclick="progBit('LSH')">&lt;&lt;</button>
+                <button class="btn btn-bit" onclick="progBit('RSH')">&gt;&gt;</button>
+                <button class="btn btn-spec" onclick="progDel()">⌫</button>
+                <button class="btn btn-clear prog-clr" onclick="progClear()">AC</button>
+
+                <button class="btn btn-hex" id="pbtn-A" onclick="progInput('A')">A</button>
+                <button class="btn btn-hex" id="pbtn-B" onclick="progInput('B')">B</button>
+                <button class="btn btn-hex" id="pbtn-C" onclick="progInput('C')">C</button>
+                <button class="btn btn-op  prog-op" onclick="progOp('/')">÷</button>
+
+                <button class="btn btn-hex" id="pbtn-D" onclick="progInput('D')">D</button>
+                <button class="btn btn-hex" id="pbtn-E" onclick="progInput('E')">E</button>
+                <button class="btn btn-hex" id="pbtn-F" onclick="progInput('F')">F</button>
+                <button class="btn btn-op  prog-op" onclick="progOp('*')">×</button>
+
+                <button class="btn btn-num prog-num" id="pbtn-7" onclick="progInput('7')">7</button>
+                <button class="btn btn-num prog-num" id="pbtn-8" onclick="progInput('8')">8</button>
+                <button class="btn btn-num prog-num" id="pbtn-9" onclick="progInput('9')">9</button>
+                <button class="btn btn-op  prog-op" onclick="progOp('-')">−</button>
+
+                <button class="btn btn-num prog-num" id="pbtn-4" onclick="progInput('4')">4</button>
+                <button class="btn btn-num prog-num" id="pbtn-5" onclick="progInput('5')">5</button>
+                <button class="btn btn-num prog-num" id="pbtn-6" onclick="progInput('6')">6</button>
+                <button class="btn btn-op  prog-op" onclick="progOp('+')">+</button>
+
+                <button class="btn btn-num prog-num" id="pbtn-1" onclick="progInput('1')">1</button>
+                <button class="btn btn-num prog-num" id="pbtn-2" onclick="progInput('2')">2</button>
+                <button class="btn btn-num prog-num" id="pbtn-3" onclick="progInput('3')">3</button>
+                <button class="btn btn-eq  prog-eq"  onclick="progCalc()">=</button>
+
+                <button class="btn btn-num prog-num btn-wide" id="pbtn-0" onclick="progInput('0')">0</button>
+                <button class="btn btn-spec" onclick="progOp('%')">%</button>
+                <button class="btn btn-spec" onclick="progToggleSign()">+/−</button>
+            </div>
+            </div><!-- /scroll-panel -->
+        </div>
+
+        <!-- ЖУРНАЛ -->
+        <div class="panel" id="panel-journal">
+            <div class="journal-header">
+                <span class="journal-title" data-i18n="j_title">// ИСТОРИЯ ВЫЧИСЛЕНИЙ</span>
+                <button class="journal-clear" onclick="clearJournal()" data-i18n="j_clear">ОЧИСТИТЬ</button>
+            </div>
+            <div class="journal-search">
+                <input type="text" id="journal-q" placeholder="🔍 ПОИСК ПО ИСТОРИИ..." data-i18n-ph="j_search" oninput="filterJournal()">
+            </div>
+            <div class="journal-list" id="journal-list"></div>
+        </div>
+
+        <div class="status-row">
+            <span data-i18n="status_name">КИБЕРКАЛК-3000</span>
+            <span id="clock">--:--:--</span>
+            <span id="status-engine" data-i18n="status_engine">НЕЙРО ДВИЖОК v3.1</span>
+        </div>
+    </div>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ -->
+    <div class="side-panel right">
+        <!-- ПРАВЫЙ ВЕРХ: время -->
+        <div class="sp-corner top">
+            <div class="sp-corner-label" data-i18n="sp_time">ВРЕМЯ</div>
+            <div class="sp-corner-value sp-clock" id="side-clock">--:--:--</div>
+        </div>
+        <div class="pulse-dot"></div>
+        <div class="indicator">
+            <div class="ind-label">NET</div>
+            <div class="ind-bar"><div class="ind-bar-fill" id="net-bar" style="width:0%"></div></div>
+            <div class="ind-val" id="net-val">0%</div>
+        </div>
+        <svg class="circuit-svg" width="76" height="110" viewBox="0 0 76 110" style="transform:scaleX(-1)">
+            <line x1="8" y1="10" x2="8" y2="100" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="8" y1="28" x2="38" y2="28" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="38" y1="28" x2="38" y2="48" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="38" y1="48" x2="68" y2="48" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="8" y1="65" x2="52" y2="65" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="52" y1="65" x2="52" y2="82" stroke="#ff007f" stroke-width="1.5"/>
+            <line x1="8" y1="82" x2="52" y2="82" stroke="#ff007f" stroke-width="1.5"/>
+            <circle cx="8" cy="28" r="3" fill="#ff007f"/>
+            <circle cx="38" cy="48" r="3" fill="#ff007f"/>
+            <circle cx="52" cy="65" r="3" fill="#ff007f"/>
+            <rect x="33" y="23" width="10" height="10" rx="2" fill="none" stroke="#ff007f" stroke-width="1.5"/>
+            <rect x="48" y="43" width="10" height="10" rx="2" fill="none" stroke="#ff007f" stroke-width="1.5"/>
+            <circle cx="8" cy="65" r="5" fill="none" stroke="#ff007f" stroke-width="1.5"/>
+        </svg>
+        <div class="data-stream"></div>
+        <div class="indicator">
+            <div class="ind-label">GPU</div>
+            <div class="ind-bar"><div class="ind-bar-fill" id="gpu-bar" style="width:0%"></div></div>
+            <div class="ind-val" id="gpu-val">0%</div>
+        </div>
+        <!-- ПРАВЫЙ НИЗ: дата -->
+        <div class="sp-corner bottom">
+            <div class="sp-corner-label" data-i18n="sp_date">ДАТА</div>
+            <div class="sp-corner-value sp-date" id="side-date">--/--/----</div>
+        </div>
+    </div>
+
+</div>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════
+//  ЯЗЫК ИНТЕРФЕЙСА
+// ═══════════════════════════════════════════════
+let lang = localStorage.getItem('cyberCalcLang') || 'ru';
+
+const T = {
+    title1:        { ru:'КИБЕР',      en:'CYBER',         zh:'网络' },
+    title2:        { ru:'КАЛК',       en:'CALC',          zh:'算' },
+    badge_online:  { ru:'В СЕТИ',     en:'ONLINE',        zh:'在线' },
+    tab_basic:     { ru:'ОСНОВНОЙ',   en:'BASIC',         zh:'基础' },
+    tab_eng:       { ru:'ИНЖЕНЕР',    en:'ENG',           zh:'工程' },
+    tab_age:       { ru:'ВОЗРАСТ',    en:'AGE',           zh:'年龄' },
+    tab_conv:      { ru:'КОНВЕРТ',    en:'CONV',          zh:'换算' },
+    tab_prog:      { ru:'ПРОГР',      en:'PROG',          zh:'编程' },
+    tab_journal:   { ru:'ЖУРНАЛ',     en:'LOG',           zh:'日志' },
+    disp_label:    { ru:'// РЕЗУЛЬТАТ',          en:'// RESULT',           zh:'// 结果' },
+    copy_btn:      { ru:'[ КОПИРОВАТЬ ]',        en:'[ COPY ]',            zh:'[ 复制 ]' },
+    copy_done:     { ru:'[ СКОПИРОВАНО ✓ ]',     en:'[ COPIED ✓ ]',        zh:'[ 已复制 ✓ ]' },
+    sp_street:     { ru:'УЛИЦА',      en:'STREET',        zh:'室外' },
+    sp_system:     { ru:'СИСТЕМА',    en:'SYSTEM',        zh:'系统' },
+    sp_time:       { ru:'ВРЕМЯ',      en:'TIME',          zh:'时间' },
+    sp_date:       { ru:'ДАТА',       en:'DATE',          zh:'日期' },
+    status_name:   { ru:'КИБЕРКАЛК-3000',        en:'CYBERCALC-3000',      zh:'网络算-3000' },
+    status_engine: { ru:'НЕЙРО ДВИЖОК v3.1',     en:'NEURO ENGINE v3.1',   zh:'神经引擎 v3.1' },
+    j_title:       { ru:'// ИСТОРИЯ ВЫЧИСЛЕНИЙ', en:'// CALC HISTORY',     zh:'// 计算历史' },
+    j_clear:       { ru:'ОЧИСТИТЬ',   en:'CLEAR',         zh:'清除' },
+    j_empty:       { ru:'ИСТОРИЯ ПУСТА',         en:'HISTORY EMPTY',       zh:'历史记录为空' },
+    j_search:      { ru:'🔍 ПОИСК ПО ИСТОРИИ...', en:'🔍 SEARCH...', zh:'🔍 搜索...' },
+    age_birth_lbl: { ru:'// дата рождения',      en:'// date of birth',    zh:'// 出生日期' },
+    age_target_lbl:{ ru:'// на какую дату считать (необязательно)', en:'// calculate to date (optional)', zh:'// 计算至日期（可选）' },
+    age_ph:        { ru:'// ВВЕДИТЕ ДАТУ РОЖДЕНИЯ', en:'// ENTER DATE OF BIRTH', zh:'// 请输入出生日期' },
+    age_result_title:{ ru:'// РЕЗУЛЬТАТ АНАЛИЗА', en:'// ANALYSIS RESULT', zh:'// 分析结果' },
+    age_years:     { ru:'ЛЕТ',        en:'YRS',           zh:'岁' },
+    age_mo:        { ru:'МЕС',        en:'MO',            zh:'月' },
+    age_d:         { ru:'ДН',         en:'D',             zh:'天' },
+    age_days_lived:{ ru:'ДНЕЙ ПРОЖИТО',   en:'DAYS LIVED',    zh:'已过天数' },
+    age_weeks:     { ru:'НЕДЕЛЬ',     en:'WEEKS',         zh:'周数' },
+    age_months_total:{ ru:'МЕСЯЦЕВ', en:'MONTHS',         zh:'月数' },
+    age_hours:     { ru:'ЧАСОВ',      en:'HOURS',         zh:'小时数' },
+    age_next_bday: { ru:'ДО СЛЕДУЮЩЕГО ДР', en:'TO NEXT BIRTHDAY', zh:'距下次生日' },
+    age_days_sfx:  { ru:'дн.',        en:'d.',            zh:'天' },
+    age_err_inv:   { ru:'// НЕВЕРНАЯ ДАТА',       en:'// INVALID DATE',     zh:'// 日期无效' },
+    age_err_future:{ ru:'// ОШИБКА: ДАТА В БУДУЩЕМ', en:'// ERROR: DATE IN FUTURE', zh:'// 错误: 日期在未来' },
+    conv_back:     { ru:'← НАЗАД',    en:'← BACK',        zh:'← 返回' },
+    conv_from:     { ru:'ИЗ ЧЕГО',    en:'FROM',          zh:'从' },
+    conv_to_lbl:   { ru:'В ЧТО',      en:'TO',            zh:'到' },
+    conv_enter:    { ru:'ВВЕДИТЕ ЗНАЧЕНИЕ', en:'ENTER VALUE', zh:'输入值' },
+    conv_result:   { ru:'// РЕЗУЛЬТАТ',   en:'// RESULT',   zh:'// 结果' },
+    conv_enter_temp:{ ru:'ВВЕДИТЕ ТЕМПЕРАТУРУ', en:'ENTER TEMPERATURE', zh:'输入温度' },
+    conv_enter_dec:{ ru:'ВВЕДИТЕ ДЕСЯТИЧНОЕ ЧИСЛО', en:'ENTER DECIMAL NUMBER', zh:'输入十进制数' },
+    conv_translation:{ ru:'// ПЕРЕВОД', en:'// CONVERSION', zh:'// 转换' },
+    conv_enter_hint:{ ru:'Введите число...', en:'Enter number...', zh:'输入数字...' },
+    conv_bin:      { ru:'Двоичная (BIN)',       en:'Binary (BIN)',     zh:'二进制 (BIN)' },
+    conv_oct:      { ru:'Восьмеричная (OCT)',   en:'Octal (OCT)',      zh:'八进制 (OCT)' },
+    conv_dec_lbl:  { ru:'Десятичная (DEC)',     en:'Decimal (DEC)',    zh:'十进制 (DEC)' },
+    conv_hex:      { ru:'Шестнадцатеричная (HEX)', en:'Hexadecimal (HEX)', zh:'十六进制 (HEX)' },
+    conv_length:   { ru:'Длина',      en:'Length',        zh:'长度' },
+    conv_mass:     { ru:'Масса',      en:'Mass',          zh:'质量' },
+    conv_temp:     { ru:'Температура',en:'Temperature',   zh:'温度' },
+    conv_speed:    { ru:'Скорость',   en:'Speed',         zh:'速度' },
+    conv_area:     { ru:'Площадь',    en:'Area',          zh:'面积' },
+    conv_volume:   { ru:'Объём',      en:'Volume',        zh:'体积' },
+    conv_time:     { ru:'Время',      en:'Time',          zh:'时间' },
+    conv_currency: { ru:'Валюта',     en:'Currency',      zh:'货币' },
+    conv_numeral:  { ru:'Системы счисления', en:'Number Systems', zh:'数制' },
+    conv_bmi:      { ru:'ИМТ',        en:'BMI',           zh:'体重指数' },
+    conv_tax:      { ru:'Налог с дохода', en:'Income Tax', zh:'所得税' },
+    conv_mortgage: { ru:'Ипотека',    en:'Mortgage',      zh:'抵押贷款' },
+    mode_basic:    { ru:'ОСНОВНОЙ РЕЖИМ',   en:'BASIC MODE',      zh:'基础模式' },
+    mode_eng:      { ru:'ИНЖЕНЕРНЫЙ РЕЖИМ', en:'ENGINEER MODE',   zh:'工程模式' },
+    mode_age:      { ru:'ВОЗРАСТ',          en:'AGE',             zh:'年龄' },
+    mode_conv:     { ru:'КОНВЕРТЕР',        en:'CONVERTER',       zh:'换算器' },
+    mode_prog:     { ru:'ПРОГРАММИСТ',      en:'PROGRAMMER',      zh:'编程模式' },
+    mode_journal:  { ru:'ЖУРНАЛ ОПЕРАЦИЙ',  en:'OPERATION LOG',   zh:'操作日志' },
+    jm_basic:      { ru:'ОСНОВН',  en:'BASIC', zh:'基础' },
+    jm_eng:        { ru:'ИНЖЕНЕР', en:'ENG',   zh:'工程' },
+    jm_prog:       { ru:'ПРОГР',   en:'PROG',  zh:'编程' },
+    jm_age:        { ru:'ВОЗРАСТ', en:'AGE',   zh:'年龄' },
+    jm_conv:       { ru:'КОНВЕРТ', en:'CONV',  zh:'换算' },
+    angle_deg:     { ru:'ГРД',     en:'DEG',   zh:'度' },
+    angle_rad:     { ru:'РАД',     en:'RAD',   zh:'弧' },
+    err_div0:      { ru:'Ошибка: деление на 0',     en:'Error: div by 0',         zh:'错误: 除以零' },
+    err_overflow:  { ru:'Ошибка: переполнение',      en:'Error: overflow',          zh:'错误: 溢出' },
+    err_range:     { ru:'Ошибка: вне диапазона',     en:'Error: out of range',      zh:'错误: 超出范围' },
+    err_tan90:     { ru:'Ошибка: tan(90°)',           en:'Error: tan(90°)',          zh:'错误: tan(90°)' },
+    err_abs1:      { ru:'Ошибка: |x| > 1',           en:'Error: |x| > 1',          zh:'错误: |x| > 1' },
+    err_sqrt:      { ru:'Ошибка: √ от отриц.',        en:'Error: √ of negative',    zh:'错误: 负数开方' },
+    err_log:       { ru:'Ошибка: log(≤0)',            en:'Error: log(≤0)',           zh:'错误: log(≤0)' },
+    err_ln:        { ru:'Ошибка: ln(≤0)',             en:'Error: ln(≤0)',            zh:'错误: ln(≤0)' },
+    err_fact_int:  { ru:'Ошибка: n! только целые',    en:'Error: n! integers only',  zh:'错误: n! 仅整数' },
+    err_fact_big:  { ru:'Ошибка: n! слишком велико',  en:'Error: n! too large',      zh:'错误: n! 太大' },
+    err_inv0:      { ru:'Ошибка: 1/0',               en:'Error: 1/0',               zh:'错误: 1/0' },
+    err_acosh:     { ru:'Ошибка: acosh(x<1)',         en:'Error: acosh(x<1)',        zh:'错误: acosh(x<1)' },
+    err_atanh:     { ru:'Ошибка: atanh |x|≥1',       en:'Error: atanh |x|≥1',      zh:'错误: atanh |x|≥1' },
+    bmi_title:     { ru:'ИНДЕКС МАССЫ ТЕЛА', en:'BODY MASS INDEX',  zh:'体重指数' },
+    bmi_height:    { ru:'РОСТ (см)',          en:'HEIGHT (cm)',       zh:'身高 (厘米)' },
+    bmi_weight:    { ru:'ВЕС (кг)',           en:'WEIGHT (kg)',       zh:'体重 (千克)' },
+    bmi_result:    { ru:'// РЕЗУЛЬТАТ — ИМТ', en:'// RESULT — BMI',  zh:'// 结果 — 指数' },
+    bmi_cat1:      { ru:'ВЫРАЖЕННЫЙ ДЕФИЦИТ', en:'SEVERE UNDERWEIGHT', zh:'严重偏瘦' },
+    bmi_cat2:      { ru:'НЕДОСТАТОЧНЫЙ ВЕС',  en:'UNDERWEIGHT',       zh:'偏瘦' },
+    bmi_cat3:      { ru:'НОРМА ✓',            en:'NORMAL ✓',          zh:'正常 ✓' },
+    bmi_cat4:      { ru:'ИЗБЫТОЧНЫЙ ВЕС',     en:'OVERWEIGHT',        zh:'偏胖' },
+    bmi_cat5:      { ru:'ОЖИРЕНИЕ I',          en:'OBESITY I',         zh:'肥胖 I' },
+    bmi_cat6:      { ru:'ОЖИРЕНИЕ II+',        en:'OBESITY II+',       zh:'肥胖 II+' },
+    tax_title:     { ru:'НАЛОГ С ДОХОДА',     en:'INCOME TAX',        zh:'所得税' },
+    tax_income:    { ru:'ВАШ ДОХОД',          en:'YOUR INCOME',       zh:'您的收入' },
+    tax_rate:      { ru:'СТАВКА НАЛОГА (%)',   en:'TAX RATE (%)',      zh:'税率 (%)' },
+    tax_result:    { ru:'// РЕЗУЛЬТАТ',       en:'// RESULT',         zh:'// 结果' },
+    tax_income_lbl:{ ru:'ДОХОД',              en:'INCOME',            zh:'收入' },
+    tax_net:       { ru:'НА РУКИ',            en:'NET',               zh:'税后' },
+    tax_tax_lbl:   { ru:'НАЛОГ',              en:'TAX',               zh:'税额' },
+    mort_title:    { ru:'ИПОТЕКА',            en:'MORTGAGE',          zh:'抵押贷款' },
+    mort_amount:   { ru:'СУММА КРЕДИТА',      en:'LOAN AMOUNT',       zh:'贷款金额' },
+    mort_rate:     { ru:'СТАВКА (% в год)',   en:'RATE (% p.a.)',     zh:'年利率 (%)' },
+    mort_term:     { ru:'СРОК (лет)',          en:'TERM (years)',      zh:'期限 (年)' },
+    mort_result:   { ru:'// ЕЖЕМЕСЯЧНЫЙ ПЛАТЁЖ', en:'// MONTHLY PAYMENT', zh:'// 月供' },
+    mort_mo:       { ru:'/ мес',              en:'/ mo',              zh:'/ 月' },
+    mort_total:    { ru:'ИТОГО ВЫПЛАТ',       en:'TOTAL PAYMENTS',    zh:'总还款额' },
+    mort_overpay:  { ru:'ПЕРЕПЛАТА',          en:'OVERPAYMENT',       zh:'超付金额' },
+    mem_mc:        { ru:'Очистить память',     en:'Clear memory',      zh:'清除内存' },
+    mem_mr:        { ru:'Вспомнить из памяти', en:'Recall memory',     zh:'读取内存' },
+    mem_mplus:     { ru:'Добавить к памяти',   en:'Add to memory',     zh:'内存加' },
+    mem_mminus:    { ru:'Вычесть из памяти',   en:'Subtract from memory', zh:'内存减' },
+};
+
+function _(key) { return (T[key] && T[key][lang]) || key; }
+
+function setLang(l) {
+    lang = l;
+    localStorage.setItem('cyberCalcLang', l);
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === l);
+    });
+    applyLang();
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = _(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        el.placeholder = _(el.dataset.i18nPh);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = _(el.dataset.i18nTitle);
+    });
+    const modeKeys = { basic:'mode_basic', engineer:'mode_eng', age:'mode_age', convert:'mode_conv', prog:'mode_prog', journal:'mode_journal' };
+    const modeEl = document.getElementById('disp-mode');
+    if (modeEl) modeEl.textContent = _(modeKeys[activeTab] || 'mode_basic');
+    const btn = document.getElementById('btn-degrad');
+    if (btn) btn.textContent = _(angleMode === 'DEG' ? 'angle_deg' : 'angle_rad');
+    if (isErr && errKey) { current = _(errKey); updateDisplay(); }
+    if (activeTab === 'journal') renderJournal();
+    const locale = lang === 'zh' ? 'zh-CN' : lang === 'en' ? 'en-US' : 'ru-RU';
+    const now = new Date();
+    const sc = document.getElementById('side-clock');
+    const sd = document.getElementById('side-date');
+    if (sc) sc.textContent = now.toLocaleTimeString(locale, { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    if (sd) sd.textContent = now.toLocaleDateString(locale, { day:'2-digit', month:'2-digit', year:'numeric' });
+    updateStatusMsgs();
+}
+
+function updateStatusMsgs() {
+    const msgs = {
+        ru: ['НЕЙРО ДВИЖОК v3.1','СИСТЕМА АКТИВНА','> ГОТОВ К ВВОДУ_','КВАНТОВЫЙ РЕЖИМ ON','МАТРИЦА ЗАГРУЖЕНА','ШИФРОВАНИЕ AES-256','НЕЙРОСЕТЬ: ОНЛАЙН','01001111 01001011','ДОСТУП РАЗРЕШЁН ✓','СИНАПСЫ: 99.9%','FIREWALL: ACTIVE'],
+        en: ['NEURO ENGINE v3.1','SYSTEM ACTIVE','> READY FOR INPUT_','QUANTUM MODE ON','MATRIX LOADED','ENCRYPTION AES-256','NEURAL NET: ONLINE','01001111 01001011','ACCESS GRANTED ✓','SYNAPSES: 99.9%','FIREWALL: ACTIVE'],
+        zh: ['神经引擎 v3.1','系统就绪','> 等待输入_','量子模式 ON','矩阵已加载','加密 AES-256','神经网络: 在线','01001111 01001011','访问已授权 ✓','突触: 99.9%','防火墙: 启动'],
+    };
+    _sMsgs.length = 0;
+    (msgs[lang] || msgs.ru).forEach(m => _sMsgs.push(m));
+}
+
+// ═══════════════════════════════════════════════
+//  ОСНОВНОЙ КАЛЬКУЛЯТОР
+// ═══════════════════════════════════════════════
+let current       = '0';
+let previous      = '';
+let operator      = null;
+let justCalc      = false;
+let isErr         = false;
+let errKey        = '';
+let angleMode     = 'DEG';  // DEG | RAD
+let memory        = 0;
+let calcHistory   = [];   // [{expr, ts, mode}, ...]
+let activeTab     = 'basic';
+
+// ── ЗАГРУЗКА ИСТОРИИ из localStorage ──
+(function loadJournal() {
+    try {
+        const raw = localStorage.getItem('cyberCalcJournal');
+        if (raw) calcHistory = JSON.parse(raw);
+    } catch(e) { calcHistory = []; }
+})();
+
+function setError(key) {
+    isErr = true; errKey = key;
+    current = _(key);
+    justCalc = true;
+    updateDisplay();
+}
+
+function updateDisplay() {
+    const el  = document.getElementById('display');
+    const isErr_ = isErr || current === 'Infinity' || current === 'NaN';
+    if (isErr_) {
+        el.textContent  = current;
+        el.className    = 'current error';
+    } else {
+        const v = current;
+        // Автоматически уменьшаем шрифт для длинных чисел
+        el.style.fontSize = v.length > 14 ? '18px' : v.length > 10 ? '24px' : '32px';
+        el.textContent  = v;
+        el.className    = 'current pop';
+        setTimeout(() => el.classList.remove('pop'), 150);
+    }
+}
+
+function setHistory(t) { document.getElementById('history').textContent = t; }
+
+function numInput(d) {
+    beep(660, 'square', 0.04, 0.03);
+    if (isErr) { isErr = false; errKey = ''; current = d; justCalc = false; updateDisplay(); return; }
+    if (justCalc) { current = d; justCalc = false; }
+    else current = current === '0' ? d : current + d;
+    updateDisplay();
+}
+
+function inputDot() {
+    if (justCalc) { current = '0.'; justCalc = false; }
+    else if (!current.includes('.')) current += '.';
+    updateDisplay();
+}
+
+function deleteLast() {
+    if (justCalc) return;
+    current = current.length > 1 ? current.slice(0, -1) : '0';
+    updateDisplay();
+}
+
+function setOp(op) {
+    beep(440, 'sine', 0.07, 0.05);
+    if (isErr) return;
+    if (operator && !justCalc) calculate(true);
+    previous  = current;
+    operator  = op;
+    justCalc  = true;
+    const sym = {'+':'+','-':'−','*':'×','/':'÷','^':'^'};
+    setHistory(previous + ' ' + (sym[op] || op));
+}
+
+function calculate(chain = false) {
+    if (!operator || !previous) return;
+    const a = parseFloat(previous);
+    const b = parseFloat(current);
+    let r;
+    switch (operator) {
+        case '+': r = a + b; break;
+        case '-': r = a - b; break;
+        case '*': r = a * b; break;
+        case '/':
+            if (b === 0) { setError('err_div0'); return; }
+            r = a / b; break;
+        case '^': r = Math.pow(a, b); break;
+        default: return;
+    }
+    if (!isFinite(r)) { setError('err_overflow'); return; }
+    const sym = {'+':'+','-':'−','*':'×','/':'÷','^':'^'};
+    const expr = previous + ' ' + (sym[operator] || operator) + ' ' + current;
+    const res  = fmtNum(r);
+    if (!chain) {
+        setHistory(expr + ' =');
+        addHistory(expr + ' = ' + res);
+    }
+    beep(880, 'sine', 0.12, 0.07);
+    triggerResultFlash();
+    current  = res;
+    operator = null; previous = ''; justCalc = true;
+    updateDisplay();
+}
+
+function clearAll() {
+    beep(220, 'sawtooth', 0.08, 0.04);
+    current = '0'; previous = ''; operator = null; justCalc = false; isErr = false; errKey = '';
+    setHistory(''); updateDisplay();
+}
+
+function toggleSign() {
+    if (isErr) return;
+    const v = parseFloat(current);
+    if (isNaN(v)) return;
+    const r = v * -1;
+    current = r === 0 ? '0' : fmtNum(r);
+    updateDisplay();
+}
+
+function percent() {
+    if (isErr) return;
+    const b = parseFloat(current);
+    if (isNaN(b)) return;
+    const orig = current;
+    let r;
+    if (operator && previous) {
+        const a = parseFloat(previous);
+        if (operator === '+' || operator === '-') r = a * b / 100;
+        else r = b / 100;
+    } else { r = b / 100; }
+    const res = fmtNum(r);
+    addHistory(`${orig}% = ${res}`, 'basic');
+    current = res; justCalc = true; updateDisplay();
+}
+
+// ── ИНЖЕНЕРНЫЕ ФУНКЦИИ ──
+function toggleAngle() {
+    angleMode = angleMode === 'DEG' ? 'RAD' : 'DEG';
+    const btn = document.getElementById('btn-degrad');
+    if (btn) btn.textContent = _(angleMode === 'DEG' ? 'angle_deg' : 'angle_rad');
+}
+
+function toRad(x) { return angleMode === 'DEG' ? x * Math.PI / 180 : x; }
+function fromRad(x) { return angleMode === 'DEG' ? x * 180 / Math.PI : x; }
+
+function engFunc(f) {
+    if (isErr) return;
+    const x = parseFloat(current);
+    if (isNaN(x)) return;
+    let r, label;
+    const u = angleMode === 'DEG' ? '°' : 'р';
+    switch (f) {
+        case 'sin':  r = Math.sin(toRad(x));  label = `SIN(${x}${u})`; break;
+        case 'cos':  r = Math.cos(toRad(x));  label = `COS(${x}${u})`; break;
+        case 'tan':
+            if (angleMode === 'DEG' && Math.abs(x % 180) === 90) { setError('err_tan90'); return; }
+            r = Math.tan(toRad(x)); label = `TAN(${x}${u})`; break;
+        case 'asin':
+            if (x < -1 || x > 1) { setError('err_abs1'); return; }
+            r = fromRad(Math.asin(x)); label = `ASIN(${x})`; break;
+        case 'acos':
+            if (x < -1 || x > 1) { setError('err_abs1'); return; }
+            r = fromRad(Math.acos(x)); label = `ACOS(${x})`; break;
+        case 'atan': r = fromRad(Math.atan(x)); label = `ATAN(${x})`; break;
+        case 'sqrt':
+            if (x < 0) { setError('err_sqrt'); return; }
+            r = Math.sqrt(x); label = `√(${x})`; break;
+        case 'cbrt': r = Math.cbrt(x); label = `∛(${x})`; break;
+        case 'log':
+            if (x <= 0) { setError('err_log'); return; }
+            r = Math.log10(x); label = `LOG(${x})`; break;
+        case 'ln':
+            if (x <= 0) { setError('err_ln'); return; }
+            r = Math.log(x); label = `LN(${x})`; break;
+        case 'pow2': r = x * x; label = `${x}²`; break;
+        case 'pow3': r = x * x * x; label = `${x}³`; break;
+        case 'inv':
+            if (x === 0) { setError('err_inv0'); return; }
+            r = 1 / x; label = `1/${x}`; break;
+        case 'abs':  r = Math.abs(x); label = `|${x}|`; break;
+        case 'fact':
+            if (x < 0 || !Number.isInteger(x)) { setError('err_fact_int'); return; }
+            if (x > 170) { setError('err_fact_big'); return; }
+            r = factorial(x); label = `${x}!`; break;
+        case 'pi': r = Math.PI; label = 'π'; break;
+        case 'e':  r = Math.E;  label = 'e'; break;
+        case 'deg':   r = x * Math.PI / 180; label = `${x}°→rad`; break;
+        case 'exp':   r = Math.exp(x);  label = `e^(${x})`; break;
+        case 'sinh':  r = Math.sinh(x); label = `sinh(${x})`; break;
+        case 'cosh':  r = Math.cosh(x); label = `cosh(${x})`; break;
+        case 'tanh':  r = Math.tanh(x); label = `tanh(${x})`; break;
+        case 'asinh': r = Math.asinh(x); label = `asinh(${x})`; break;
+        case 'acosh':
+            if (x < 1) { setError('err_acosh'); return; }
+            r = Math.acosh(x); label = `acosh(${x})`; break;
+        case 'atanh':
+            if (x <= -1 || x >= 1) { setError('err_atanh'); return; }
+            r = Math.atanh(x); label = `atanh(${x})`; break;
+        default: return;
+    }
+    if (!isFinite(r) || isNaN(r)) { setError('err_range'); return; }
+    const res = fmtNum(r);
+    setHistory(label + ' =');
+    addHistory(label + ' = ' + res, 'engineer');
+    triggerResultFlash();
+    current  = res;
+    justCalc = true;
+    updateDisplay();
+}
+
+function factorial(n) {
+    if (n === 0 || n === 1) return 1;
+    let r = 1; for (let i = 2; i <= n; i++) r *= i; return r;
+}
+
+// ── ПАМЯТЬ ──
+function memAdd()  { memory += parseFloat(current) || 0; updateMemDisplay(); }
+function memSub()  { memory -= parseFloat(current) || 0; updateMemDisplay(); }
+function memRead() { current = fmtNum(memory); justCalc = true; updateDisplay(); }
+function memClear(){ memory = 0; updateMemDisplay(); }
+
+function updateMemDisplay() {
+    const ind = document.getElementById('mem-indicator');
+    const val = document.getElementById('mem-display');
+    if (memory !== 0) {
+        ind.classList.add('visible');
+        val.textContent = fmtNum(memory);
+        document.querySelectorAll('.btn-mem').forEach(b => b.classList.add('mem-has'));
+    } else {
+        ind.classList.remove('visible');
+        document.querySelectorAll('.btn-mem').forEach(b => b.classList.remove('mem-has'));
+    }
+}
+
+// ── ИСТОРИЯ ──
+function nowTs() {
+    const d = new Date();
+    const date = d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const time = d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return date + '  ' + time;
+}
+
+function addHistory(expr, mode) {
+    calcHistory.unshift({ expr, ts: nowTs(), mode: mode || activeTab });
+    if (calcHistory.length > 200) calcHistory.pop();
+    try { localStorage.setItem('cyberCalcJournal', JSON.stringify(calcHistory)); } catch(e) {}
+    renderMiniHistory();
+    if (activeTab === 'journal') renderJournal();
+}
+
+function renderMiniHistory() {
+    const panel = document.getElementById('history-panel');
+    const recent = calcHistory.slice(0, 8);
+    if (recent.length === 0) { panel.classList.remove('has-items'); return; }
+    panel.classList.add('has-items');
+    panel.innerHTML = recent.map((e, i) =>
+        `<div class="hist-item" onclick="useHistory(${i})">${e.expr}</div>`
+    ).join('');
+}
+
+function renderJournal() {
+    const list = document.getElementById('journal-list');
+    if (!list) return;
+    if (calcHistory.length === 0) {
+        list.innerHTML = `<div class="journal-empty">
+            <div class="journal-empty-icon">📋</div>
+            <div class="journal-empty-txt">${_('j_empty')}</div>
+        </div>`;
+        return;
+    }
+    const modeLabel = { basic:_('jm_basic'), engineer:_('jm_eng'), prog:_('jm_prog'), age:_('jm_age'), convert:_('jm_conv') };
+    list.innerHTML = calcHistory.map((e, i) => {
+        const parts = e.expr.split('=');
+        const left  = parts.slice(0, -1).join('=');
+        const right = parts.length > 1 ? parts[parts.length - 1].trim() : '';
+        const badge = e.mode && modeLabel[e.mode]
+            ? `<span class="journal-mode-badge">${modeLabel[e.mode]}</span>` : '';
+        const exprHtml = right
+            ? `${left.trim()} <span class="jeq">=</span> <span class="jres">${right}</span>`
+            : e.expr;
+        return `<div class="journal-entry" onclick="useHistory(${i})">
+            <div class="journal-ts">${e.ts}${badge}</div>
+            <div class="journal-expr">${exprHtml}</div>
+        </div>`;
+    }).join('');
+}
+
+function filterJournal() {
+    const q = (document.getElementById('journal-q')?.value || '').toLowerCase();
+    document.querySelectorAll('.journal-entry').forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+
+function clearJournal() {
+    calcHistory = [];
+    try { localStorage.removeItem('cyberCalcJournal'); } catch(e) {}
+    renderMiniHistory();
+    renderJournal();
+}
+
+function useHistory(i) {
+    const entry = calcHistory[i];
+    if (!entry) return;
+    const parts = entry.expr.split('=');
+    if (parts.length > 1) {
+        current = parts[parts.length - 1].trim();
+        justCalc = true;
+        if (activeTab === 'journal') switchTab('basic', document.querySelector('.tab'));
+        updateDisplay();
+    }
+}
+
+// ── КОПИРОВАТЬ ──
+function copyResult() {
+    if (isErr) return;
+    navigator.clipboard.writeText(current).catch(() => {});
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = _('copy_done');
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = _('copy_btn'); btn.style.color = ''; }, 1500);
+}
+
+// ── ФОРМАТИРОВАНИЕ ЧИСЛА ──
+function fmtNum(n) {
+    if (!isFinite(n) || isNaN(n)) return String(n);
+    // Убираем погрешность float: 0.1+0.2
+    const rounded = parseFloat(n.toPrecision(12));
+    if (Math.abs(rounded) >= 1e15 || (Math.abs(rounded) < 1e-9 && rounded !== 0)) {
+        return rounded.toExponential(6);
+    }
+    // Убираем лишние нули после запятой
+    const s = String(parseFloat(rounded.toFixed(10)));
+    return s === '-0' ? '0' : s;
+}
+
+// ═══════════════════════════════════════════════
+//  ВОЗРАСТ
+// ═══════════════════════════════════════════════
+function calcAge() {
+    const bv = document.getElementById('birthdate').value;
+    const tv = document.getElementById('targetdate').value;
+    const out = document.getElementById('age-result');
+    if (!bv) { out.innerHTML = `<div class="placeholder">${_('age_ph')}</div>`; return; }
+    const birth = new Date(bv);
+    const target = tv ? new Date(tv) : new Date();
+    if (isNaN(birth.getTime())) { out.innerHTML = `<div class="placeholder" style="color:rgba(255,0,127,0.5)">${_('age_err_inv')}</div>`; return; }
+    if (birth > target) { out.innerHTML = `<div class="placeholder" style="color:rgba(255,0,127,0.5)">${_('age_err_future')}</div>`; return; }
+    let yy = target.getFullYear() - birth.getFullYear();
+    let mm = target.getMonth() - birth.getMonth();
+    let dd = target.getDate() - birth.getDate();
+    if (dd < 0) { mm--; dd += new Date(target.getFullYear(), target.getMonth(), 0).getDate(); }
+    if (mm < 0) { yy--; mm += 12; }
+    const totalD = Math.floor((target - birth) / 86400000);
+    const totalW = Math.floor(totalD / 7);
+    const totalH = totalD * 24;
+    const totalM = yy * 12 + mm;
+    const nb = new Date(target.getFullYear(), birth.getMonth(), birth.getDate());
+    if (nb <= target) nb.setFullYear(target.getFullYear() + 1);
+    const dtb = Math.floor((nb - target) / 86400000);
+    const loc = lang === 'zh' ? 'zh-CN' : lang === 'en' ? 'en-US' : 'ru-RU';
+    out.innerHTML = `
+        <div class="result-title">${_('age_result_title')}</div>
+        <span class="big">${yy} ${_('age_years')} · ${mm} ${_('age_mo')} · ${dd} ${_('age_d')}</span>
+        <div class="row"><span>${_('age_days_lived')}</span><span>${totalD.toLocaleString(loc)}</span></div>
+        <div class="row"><span>${_('age_weeks')}</span><span>${totalW.toLocaleString(loc)}</span></div>
+        <div class="row"><span>${_('age_months_total')}</span><span>${totalM.toLocaleString(loc)}</span></div>
+        <div class="row"><span>${_('age_hours')}</span><span>${totalH.toLocaleString(loc)}</span></div>
+        <div class="row"><span>${_('age_next_bday')}</span><span>${dtb} ${_('age_days_sfx')}</span></div>
+    `;
+}
+
+// ═══════════════════════════════════════════════
+//  ВКЛАДКИ
+// ═══════════════════════════════════════════════
+function switchTab(tab, el) {
+    activeTab = tab;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    el.classList.add('active');
+    const d = document.getElementById('main-display');
+    const mr = document.querySelector('.mem-row');
+    const hp = document.getElementById('history-panel');
+    const hide = tab === 'convert' || tab === 'prog' || tab === 'age' || tab === 'journal';
+    d.style.display  = hide ? 'none' : 'block';
+    mr.style.display = (tab === 'basic' || tab === 'engineer') ? 'flex' : 'none';
+    if (tab !== 'basic' && tab !== 'engineer') hp.style.display = 'none';
+    else hp.style.display = calcHistory.length > 0 ? 'block' : 'none';
+    if (tab === 'prog') { updateProgDisplay(); updateProgButtons(); }
+    if (tab === 'journal') renderJournal();
+    const modeKeys = { basic:'mode_basic', engineer:'mode_eng', age:'mode_age', convert:'mode_conv', prog:'mode_prog', journal:'mode_journal' };
+    document.getElementById('disp-mode').textContent = _(modeKeys[tab] || 'mode_basic');
+}
+
+// ═══════════════════════════════════════════════
+//  КОНВЕРТЕР
+// ═══════════════════════════════════════════════
+const UNITS = {
+    length:   { label:'ДЛИНА',    units:['км','м','см','мм','миля','фут','дюйм','ярд'],     toBase:{'км':1000,'м':1,'см':0.01,'мм':0.001,'миля':1609.344,'фут':0.3048,'дюйм':0.0254,'ярд':0.9144} },
+    mass:     { label:'МАССА',    units:['кг','г','мг','фунт','унция','тонна','мкг'],        toBase:{'кг':1,'г':0.001,'мг':0.000001,'фунт':0.453592,'унция':0.0283495,'тонна':1000,'мкг':0.000000001} },
+    speed:    { label:'СКОРОСТЬ', units:['км/ч','м/с','миль/ч','узел','фут/с'],             toBase:{'км/ч':1/3.6,'м/с':1,'миль/ч':0.44704,'узел':0.514444,'фут/с':0.3048} },
+    area:     { label:'ПЛОЩАДЬ',  units:['м²','км²','см²','мм²','га','акр','фут²','дюйм²'],toBase:{'м²':1,'км²':1e6,'см²':0.0001,'мм²':0.000001,'га':10000,'акр':4046.86,'фут²':0.092903,'дюйм²':0.000645} },
+    volume:   { label:'ОБЪЁМ',    units:['л','мл','м³','галлон','фл.унц','стакан','ч.л','ст.л'], toBase:{'л':1,'мл':0.001,'м³':1000,'галлон':3.78541,'фл.унц':0.0295735,'стакан':0.236588,'ч.л':0.00492892,'ст.л':0.0147868} },
+    time:     { label:'ВРЕМЯ',    units:['сек','мин','час','день','неделя','месяц','год'],   toBase:{'сек':1,'мин':60,'час':3600,'день':86400,'неделя':604800,'месяц':2629800,'год':31557600} },
+    currency: { label:'ВАЛЮТА',   units:['USD','EUR','RUB','GBP','JPY','CNY','KZT','UAH'],  toBase:{USD:1,EUR:1.08,RUB:0.011,GBP:1.27,JPY:0.0067,CNY:0.138,KZT:0.0022,UAH:0.024}, note:'* Курсы приблизительные' },
+};
+
+function openConverter(type) {
+    document.getElementById('conv-grid').style.display = 'none';
+    document.getElementById('conv-view').classList.add('active');
+    if (type === 'temperature') { buildTemperature(); return; }
+    if (type === 'numeral')     { buildNumeral();     return; }
+    if (type === 'bmi')         { buildBMI();         return; }
+    if (type === 'tax')         { buildTax();         return; }
+    if (type === 'mortgage')    { buildMortgage();    return; }
+    const cfg  = UNITS[type];
+    document.getElementById('conv-title').textContent = cfg.label;
+    const opts = cfg.units.map(u => `<option value="${u}">${u}</option>`).join('');
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-row" style="margin-bottom:8px;">
+            <div class="conv-input-wrap"><label>${_('conv_from')}</label><select id="cu-from" onchange="doConvert('${type}')">${opts}</select></div>
+            <div class="conv-input-wrap"><label>${_('conv_to_lbl')}</label><select id="cu-to" onchange="doConvert('${type}')">${opts}</select></div>
+        </div>
+        <div class="conv-input-wrap" style="margin-bottom:8px;"><label>${_('conv_enter')}</label><input type="number" id="cu-val" placeholder="0" oninput="doConvert('${type}')"></div>
+        <div class="conv-result-box"><div class="conv-result-label">${_('conv_result')}</div><div class="conv-result-val" id="cu-res">—</div>${cfg.note?`<div class="conv-result-detail">${cfg.note}</div>`:''}</div>`;
+    const sel = document.getElementById('cu-to');
+    if (sel.options.length > 1) sel.selectedIndex = 1;
+}
+
+function doConvert(type) {
+    const from = document.getElementById('cu-from').value;
+    const to   = document.getElementById('cu-to').value;
+    const val  = parseFloat(document.getElementById('cu-val').value);
+    const res  = document.getElementById('cu-res');
+    if (isNaN(val)) { res.textContent = '—'; return; }
+    const cfg    = UNITS[type];
+    const result = val * cfg.toBase[from] / cfg.toBase[to];
+    res.textContent = convFmt(result) + ' ' + to;
+}
+
+function buildTemperature() {
+    document.getElementById('conv-title').textContent = _('conv_temp');
+    const celsius = lang==='zh'?'°C — 摄氏': lang==='en'?'°C — Celsius':'°C — Цельсий';
+    const fahrenheit = lang==='zh'?'°F — 华氏': lang==='en'?'°F — Fahrenheit':'°F — Фаренгейт';
+    const kelvin = lang==='zh'?'K — 开尔文': lang==='en'?'K — Kelvin':'K — Кельвин';
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-row" style="margin-bottom:8px;">
+            <div class="conv-input-wrap"><label>${_('conv_from')}</label>
+                <select id="tf" onchange="doTemp()"><option value="C">${celsius}</option><option value="F">${fahrenheit}</option><option value="K">${kelvin}</option></select></div>
+            <div class="conv-input-wrap"><label>${_('conv_to_lbl')}</label>
+                <select id="tt" onchange="doTemp()"><option value="C">${celsius}</option><option value="F">${fahrenheit}</option><option value="K">${kelvin}</option></select></div>
+        </div>
+        <div class="conv-input-wrap" style="margin-bottom:8px;"><label>${_('conv_enter_temp')}</label><input type="number" id="tv" placeholder="0" oninput="doTemp()"></div>
+        <div class="conv-result-box"><div class="conv-result-label">${_('conv_result')}</div><div class="conv-result-val" id="tr">—</div></div>`;
+    document.getElementById('tt').selectedIndex = 1;
+}
+
+function doTemp() {
+    const f = document.getElementById('tf').value;
+    const t = document.getElementById('tt').value;
+    const v = parseFloat(document.getElementById('tv').value);
+    const r = document.getElementById('tr');
+    if (isNaN(v)) { r.textContent = '—'; return; }
+    let c = f==='C' ? v : f==='F' ? (v-32)*5/9 : v-273.15;
+    let res = t==='C' ? c : t==='F' ? c*9/5+32 : c+273.15;
+    const sym = {C:'°C', F:'°F', K:'K'};
+    r.textContent = convFmt(res) + ' ' + sym[t];
+}
+
+function buildNumeral() {
+    document.getElementById('conv-title').textContent = _('conv_numeral');
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-input-wrap" style="margin-bottom:8px;"><label>${_('conv_enter_dec')}</label><input type="number" id="nd" placeholder="255" oninput="doNumeral()" step="1"></div>
+        <div class="conv-result-box" style="flex:1;"><div class="conv-result-label">${_('conv_translation')}</div>
+        <div class="conv-result-detail" id="nr" style="font-size:12px;line-height:2.2;color:rgba(255,255,255,0.5);">${_('conv_enter_hint')}</div></div>`;
+}
+
+function doNumeral() {
+    const v = parseInt(document.getElementById('nd').value, 10);
+    const r = document.getElementById('nr');
+    if (isNaN(v)) { r.innerHTML = _('conv_enter_hint'); return; }
+    const bin = v.toString(2);
+    const padLen = Math.ceil(bin.length/4)*4||4;
+    const binPad = bin.padStart(padLen,'0').replace(/(.{4})/g,'$1 ').trim();
+    r.innerHTML = `<b>${_('conv_bin')}</b>  ${binPad}<br><b>${_('conv_oct')}</b>  ${v.toString(8)}<br><b>${_('conv_dec_lbl')}</b>  ${v}<br><b>${_('conv_hex')}</b>  ${v.toString(16).toUpperCase()}`;
+}
+
+function buildBMI() {
+    document.getElementById('conv-title').textContent = _('bmi_title');
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-row" style="margin-bottom:8px;">
+            <div class="conv-input-wrap"><label>${_('bmi_height')}</label><input type="number" id="bh" placeholder="175" min="50" max="250" oninput="doBMI()"></div>
+            <div class="conv-input-wrap"><label>${_('bmi_weight')}</label><input type="number" id="bw" placeholder="70" min="1" max="500" oninput="doBMI()"></div>
+        </div>
+        <div class="conv-result-box" style="flex:1;"><div class="conv-result-label">${_('bmi_result')}</div>
+        <div class="conv-result-val" id="bv">—</div>
+        <div class="conv-result-detail" id="bc"></div>
+        <div id="bb" style="display:none;margin-top:10px;">
+            <div class="bmi-bar"><div class="bmi-marker" id="bm"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,0.2);margin-top:6px;"><span>16</span><span>18.5</span><span>25</span><span>30</span><span>40</span></div>
+        </div></div>`;
+}
+
+function doBMI() {
+    const h = parseFloat(document.getElementById('bh').value)/100;
+    const w = parseFloat(document.getElementById('bw').value);
+    if (isNaN(h)||isNaN(w)||h<=0||w<=0) return;
+    const bmi = w/(h*h);
+    document.getElementById('bv').textContent = bmi.toFixed(1);
+    let cat, color;
+    if (bmi < 16)       { cat=_('bmi_cat1'); color='#00aaff'; }
+    else if (bmi < 18.5){ cat=_('bmi_cat2'); color='#00e5ff'; }
+    else if (bmi < 25)  { cat=_('bmi_cat3'); color='#00ff88'; }
+    else if (bmi < 30)  { cat=_('bmi_cat4'); color='#ffb300'; }
+    else if (bmi < 35)  { cat=_('bmi_cat5'); color='#ff6600'; }
+    else                { cat=_('bmi_cat6'); color='#ff0040'; }
+    document.getElementById('bc').innerHTML = `<span style="color:${color};text-shadow:0 0 8px ${color};">${cat}</span>`;
+    document.getElementById('bb').style.display='block';
+    const pct = Math.min(Math.max((bmi-16)/(40-16)*100,0),100);
+    document.getElementById('bm').style.left = pct+'%';
+}
+
+function buildTax() {
+    document.getElementById('conv-title').textContent = _('tax_title');
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-input-wrap" style="margin-bottom:8px;"><label>${_('tax_income')}</label><input type="number" id="ti" placeholder="100000" oninput="doTax()"></div>
+        <div class="conv-input-wrap" style="margin-bottom:8px;"><label>${_('tax_rate')}</label><input type="number" id="tr2" placeholder="13" min="0" max="100" oninput="doTax()"></div>
+        <div class="conv-result-box" style="flex:1;"><div class="conv-result-label">${_('tax_result')}</div><div class="conv-result-val" id="txr">—</div><div class="conv-result-detail" id="txd"></div></div>`;
+}
+
+function doTax() {
+    const inc  = parseFloat(document.getElementById('ti').value);
+    const rate = parseFloat(document.getElementById('tr2').value);
+    if (isNaN(inc)||isNaN(rate)||rate<0||rate>100) return;
+    const tax = inc*rate/100;
+    const net = inc-tax;
+    document.getElementById('txr').textContent = convFmt(tax);
+    document.getElementById('txd').innerHTML = `${_('tax_income_lbl')}: <b>${convFmt(inc)}</b><br>${_('tax_tax_lbl')} (${rate}%): <b>${convFmt(tax)}</b><br>${_('tax_net')}: <b>${convFmt(net)}</b>`;
+}
+
+function buildMortgage() {
+    document.getElementById('conv-title').textContent = _('mort_title');
+    document.getElementById('conv-body').innerHTML = `
+        <div class="conv-input-wrap" style="margin-bottom:6px;"><label>${_('mort_amount')}</label><input type="number" id="ms" placeholder="5000000" oninput="doMortgage()"></div>
+        <div class="conv-row" style="margin-bottom:6px;">
+            <div class="conv-input-wrap"><label>${_('mort_rate')}</label><input type="number" id="mr" placeholder="12" min="0" oninput="doMortgage()"></div>
+            <div class="conv-input-wrap"><label>${_('mort_term')}</label><input type="number" id="my" placeholder="20" min="1" oninput="doMortgage()"></div>
+        </div>
+        <div class="conv-result-box" style="flex:1;"><div class="conv-result-label">${_('mort_result')}</div><div class="conv-result-val" id="mp">—</div><div class="conv-result-detail" id="md"></div></div>`;
+}
+
+function doMortgage() {
+    const P  = parseFloat(document.getElementById('ms').value);
+    const yr = parseFloat(document.getElementById('mr').value);
+    const n  = parseFloat(document.getElementById('my').value)*12;
+    if (isNaN(P)||isNaN(yr)||isNaN(n)||n<=0||P<=0) return;
+    let M;
+    if (yr === 0) {
+        M = P / n;
+    } else {
+        const r = yr/100/12;
+        M = P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+    }
+    const total   = M*n;
+    const overpay = total-P;
+    document.getElementById('mp').textContent = convFmt(M) + ' ' + _('mort_mo');
+    document.getElementById('md').innerHTML = `${_('mort_total')}: <b>${convFmt(total)}</b><br>${_('mort_overpay')}: <b>${convFmt(overpay)}</b>`;
+}
+
+function closeConverter() {
+    document.getElementById('conv-grid').style.display = 'grid';
+    document.getElementById('conv-view').classList.remove('active');
+    document.getElementById('conv-body').innerHTML = '';
+}
+
+function convFmt(n) {
+    if (!isFinite(n)) return '∞';
+    if (Math.abs(n) >= 1e12 || (Math.abs(n) < 0.00001 && n !== 0)) return n.toExponential(4);
+    return parseFloat(n.toFixed(6)).toLocaleString('ru-RU', { maximumFractionDigits: 6 });
+}
+
+// ═══════════════════════════════════════════════
+//  ПРОГРАММИСТ
+// ═══════════════════════════════════════════════
+let progCurrent  = '0';
+let progPrev     = 0;
+let progOper2    = null;
+let progBase     = 'DEC';
+let progJustCalc = false;
+let progWordSize = 'DWORD';
+const WS_MASK    = { BYTE: 0xFF, WORD: 0xFFFF, DWORD: 0xFFFFFFFF };
+
+function setWordSize(ws) {
+    progWordSize = ws;
+    document.querySelectorAll('.ws-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('ws-'+ws);
+    if (btn) btn.classList.add('active');
+    progCurrent = progToStr(progFromStr(progCurrent));
+    updateProgDisplay();
+}
+
+function progFromStr(s) {
+    if (!s || s === '0') return 0;
+    const base = progBase==='DEC'?10 : progBase==='HEX'?16 : progBase==='OCT'?8 : 2;
+    const v = parseInt(s, base);
+    return isNaN(v) ? 0 : v;
+}
+
+function progToStr(n) {
+    n = Math.trunc(n);
+    const mask = WS_MASK[progWordSize] || 0xFFFFFFFF;
+    const u = (n >>> 0) & mask;
+    if (progBase === 'HEX') return u.toString(16).toUpperCase() || '0';
+    if (progBase === 'OCT') return u.toString(8) || '0';
+    if (progBase === 'BIN') return u.toString(2) || '0';
+    if (mask === 0xFF)   return String(u > 127   ? u - 256   : u);
+    if (mask === 0xFFFF) return String(u > 32767 ? u - 65536 : u);
+    return String(n < 0 ? n : u);
+}
+
+function setBase(base) {
+    const dec = progBase==='DEC' ? progFromStr(progCurrent) : progFromStr(progCurrent);
+    progBase     = base;
+    progCurrent  = progToStr(dec);
+    document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('base-'+base).classList.add('active');
+    document.querySelectorAll('.prog-row').forEach(r => r.classList.remove('active-base'));
+    document.getElementById('prow-'+base.toLowerCase()).classList.add('active-base');
+    updateProgDisplay();
+    updateProgButtons();
+}
+
+function progInput(d) {
+    if (progJustCalc) { progCurrent = d; progJustCalc = false; }
+    else progCurrent = progCurrent === '0' ? d : progCurrent + d;
+    updateProgDisplay();
+}
+
+function progOp(op) {
+    if (progOper2 !== null && !progJustCalc) progCalc();
+    progPrev     = progFromStr(progCurrent);
+    progOper2    = op;
+    progJustCalc = true;
+    updateProgOpIndicator();
+}
+
+function progCalc() {
+    if (progOper2 === null) return;
+    const a = progPrev;
+    const b = progFromStr(progCurrent);
+    let r;
+    switch (progOper2) {
+        case '+':   r = a + b; break;
+        case '-':   r = a - b; break;
+        case '*':   r = a * b; break;
+        case '/':
+            if (b === 0) { progCurrent = '0'; progOper2 = null; progJustCalc = true; updateProgDisplay(); return; }
+            r = Math.trunc(a / b); break;
+        case '%':   r = b === 0 ? 0 : Math.trunc(a % b); break;
+        case 'AND': r = a & b; break;
+        case 'OR':  r = a | b; break;
+        case 'XOR': r = a ^ b; break;
+        default: return;
+    }
+    const resStr = progToStr(r);
+    const sym = {'+':'+','-':'−','*':'×','/':'÷','%':'%','AND':'AND','OR':'OR','XOR':'XOR'};
+    const aStr = progBase==='DEC' ? String(a) : progToStr(a);
+    addHistory(`${aStr} ${sym[progOper2]||progOper2} ${progCurrent} = ${resStr} [${progBase}]`, 'prog');
+    progCurrent  = resStr;
+    progOper2    = null;
+    progJustCalc = true;
+    updateProgDisplay();
+    updateProgOpIndicator();
+}
+
+function progBit(op) {
+    const a = progFromStr(progCurrent);
+    if (op === 'NOT') { progCurrent = progToStr(~a); progJustCalc = true; updateProgDisplay(); return; }
+    if (op === 'LSH') { progCurrent = progToStr(a << 1); progJustCalc = true; updateProgDisplay(); return; }
+    if (op === 'RSH') { progCurrent = progToStr(a >>> 1); progJustCalc = true; updateProgDisplay(); return; }
+    progPrev = a; progOper2 = op; progJustCalc = true;
+    updateProgOpIndicator();
+}
+
+function progClear()      { progCurrent='0'; progPrev=0; progOper2=null; progJustCalc=false; updateProgDisplay(); updateProgOpIndicator(); }
+function progDel()        { progCurrent = progCurrent.length>1 ? progCurrent.slice(0,-1) : '0'; updateProgDisplay(); }
+function progToggleSign() { const v = progFromStr(progCurrent); progCurrent = progToStr(-v); updateProgDisplay(); }
+
+function updateProgOpIndicator() {
+    const el = document.getElementById('prog-op-ind');
+    if (!el) return;
+    if (progOper2) {
+        const decVal = progPrev;
+        const sym = {'+':'+','-':'−','*':'×','/':'÷','%':'%','AND':'AND','OR':'OR','XOR':'XOR'};
+        el.textContent = `${decVal} ${sym[progOper2]||progOper2} ...`;
+    } else {
+        el.textContent = '';
+    }
+}
+
+function updateProgDisplay() {
+    const dec  = progFromStr(progCurrent);
+    const mask = WS_MASK[progWordSize] || 0xFFFFFFFF;
+    const u    = (dec >>> 0) & mask;
+    document.getElementById('pval-dec').textContent = progToStr(dec) || '0';
+    document.getElementById('pval-hex').textContent = u.toString(16).toUpperCase() || '0';
+    document.getElementById('pval-oct').textContent = u.toString(8) || '0';
+    const bin    = u.toString(2) || '0';
+    const padLen = Math.max(Math.ceil(bin.length/4)*4, 4);
+    document.getElementById('pval-bin').textContent = bin.padStart(padLen,'0').replace(/(.{4})/g,'$1 ').trim();
+    let pop = 0, tmp = u >>> 0; while(tmp){ pop += tmp & 1; tmp >>>= 1; }
+    const pc = document.getElementById('prog-popcount');
+    if (pc) pc.textContent = `1-BITS: ${pop}  SIZE: ${progWordSize}`;
+}
+
+function updateProgButtons() {
+    const allowed = { BIN:['0','1'], OCT:['0','1','2','3','4','5','6','7'], DEC:['0','1','2','3','4','5','6','7','8','9'], HEX:['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'] };
+    const ok = allowed[progBase];
+    ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'].forEach(d => {
+        const btn = document.getElementById('pbtn-'+d);
+        if (btn) btn.disabled = !ok.includes(d);
+    });
+}
+
+// ═══════════════════════════════════════════════
+//  ЧАСЫ + АНИМАЦИЯ ИНДИКАТОРОВ
+// ═══════════════════════════════════════════════
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+        [now.getHours(), now.getMinutes(), now.getSeconds()].map(v => String(v).padStart(2,'0')).join(':');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Живые рандомные индикаторы
+function animateIndicators() {
+    const data = [
+        { bar:'cpu-bar', val:'cpu-val', min:40, max:95, suffix:'%' },
+        { bar:'mem-bar', val:'mem-val', min:30, max:80, suffix:'%' },
+        { bar:'pwr-bar', val:'pwr-val', min:85, max:100, suffix:'%' },
+        { bar:'net-bar', val:'net-val', min:60, max:100, suffix:'%' },
+        { bar:'gpu-bar', val:'gpu-val', min:20, max:85, suffix:'%' },
+        { bar:'tmp-bar', val:'tmp-val', min:35, max:75, suffix:'°C', noBar:true },
+    ];
+    data.forEach(d => {
+        const v = Math.floor(Math.random() * (d.max - d.min) + d.min);
+        const barEl = document.getElementById(d.bar);
+        const valEl = document.getElementById(d.val);
+        if (barEl) barEl.style.width = v + '%';
+        if (valEl) valEl.textContent = v + d.suffix;
+    });
+}
+setTimeout(animateIndicators, 300);
+setInterval(animateIndicators, 4000);
+
+// Восстановить мини-историю после загрузки страницы
+renderMiniHistory();
+
+// Применить сохранённый язык
+applyLang();
+
+// ── ЗВУК (Web Audio API — без файлов) ──
+let _actx = null;
+function beep(freq, type, dur, vol) {
+    try {
+        if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = _actx.createOscillator(), g = _actx.createGain();
+        osc.connect(g); g.connect(_actx.destination);
+        osc.type = type||'square'; osc.frequency.value = freq||660;
+        g.gain.setValueAtTime(vol||0.04, _actx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, _actx.currentTime+(dur||0.05));
+        osc.start(); osc.stop(_actx.currentTime+(dur||0.05));
+    } catch(e) {}
+}
+
+// ── ХАКЕРСКИЕ СТАТУС-СООБЩЕНИЯ ──
+const _sMsgs = [];
+let _sIdx = 0;
+updateStatusMsgs();
+setInterval(() => {
+    const el = document.getElementById('status-engine');
+    if (el) { el.textContent = _sMsgs[_sIdx % _sMsgs.length]; _sIdx++; }
+}, 3500);
+
+// ═══════════════════════════════════════════════
+//  КЛАВИАТУРА
+// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  RESULT FLASH (3 сек после вычисления)
+// ═══════════════════════════════════════════════
+function triggerResultFlash() {
+    const disp = document.getElementById('main-display');
+    const num  = document.getElementById('display');
+    if (!disp || !num) return;
+    disp.classList.remove('result-flash');
+    num.classList.remove('result-flash');
+    void disp.offsetWidth;
+    disp.classList.add('result-flash');
+    num.classList.add('result-flash');
+    setTimeout(() => {
+        disp.classList.remove('result-flash');
+        num.classList.remove('result-flash');
+    }, 3000);
+    if (typeof cpuSim !== 'undefined') cpuSim = Math.min(88, cpuSim + 1.8 + Math.random());
+}
+
+// ═══════════════════════════════════════════════
+//  БОКОВЫЕ ПАНЕЛИ: ВРЕМЯ + ДАТА
+// ═══════════════════════════════════════════════
+function updateSidePanels() {
+    const now    = new Date();
+    const locale = lang === 'zh' ? 'zh-CN' : lang === 'en' ? 'en-US' : 'ru-RU';
+    const time   = now.toLocaleTimeString(locale, { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const date   = now.toLocaleDateString(locale, { day:'2-digit', month:'2-digit', year:'numeric' });
+    const sc = document.getElementById('side-clock');
+    const sd = document.getElementById('side-date');
+    if (sc) sc.textContent = time;
+    if (sd) sd.textContent = date;
+}
+setInterval(updateSidePanels, 1000);
+updateSidePanels();
+
+// ═══════════════════════════════════════════════
+//  СИМУЛЯЦИЯ ТЕМПЕРАТУРЫ СИСТЕМЫ
+// ═══════════════════════════════════════════════
+let cpuSim = 42 + Math.random() * 10;
+function updateCpuTemp() {
+    cpuSim += (Math.random() - 0.46) * 0.6;
+    cpuSim = Math.max(36, Math.min(88, cpuSim));
+    const el = document.getElementById('cpu-temp-val');
+    if (!el) return;
+    const t = cpuSim.toFixed(1);
+    el.textContent = t + '°C';
+    if      (cpuSim > 75) { el.style.color = '#ff4444'; el.style.textShadow = '0 0 12px #ff4444'; }
+    else if (cpuSim > 60) { el.style.color = '#ff9900'; el.style.textShadow = '0 0 12px #ff9900'; }
+    else                  { el.style.color = '';         el.style.textShadow = ''; }
+}
+setInterval(updateCpuTemp, 2500);
+updateCpuTemp();
+
+// ═══════════════════════════════════════════════
+//  ПОГОДА (геолокация + Open-Meteo, бесплатно)
+// ═══════════════════════════════════════════════
+(async function fetchWeather() {
+    const el = document.getElementById('outdoor-temp');
+    if (!el) return;
+    try {
+        const pos = await new Promise((ok, fail) =>
+            navigator.geolocation.getCurrentPosition(ok, fail, { timeout: 6000 }));
+        const { latitude: lat, longitude: lon } = pos.coords;
+        const r = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current_weather=true`
+        );
+        const d = await r.json();
+        const temp = Math.round(d.current_weather.temperature);
+        el.textContent = (temp > 0 ? '+' : '') + temp + '°C';
+    } catch(e) {
+        el.textContent = 'N/A';
+    }
+})();
+
+document.addEventListener('keydown', e => {
+    if (activeTab === 'prog') {
+        if (e.key >= '0' && e.key <= '9') { progInput(e.key); return; }
+        if ('ABCDEF'.includes(e.key.toUpperCase()) && progBase==='HEX') { progInput(e.key.toUpperCase()); return; }
+        if (e.key === '+') { progOp('+'); return; }
+        if (e.key === '-') { progOp('-'); return; }
+        if (e.key === '*') { progOp('*'); return; }
+        if (e.key === '/') { e.preventDefault(); progOp('/'); return; }
+        if (e.key === 'Enter' || e.key === '=') { progCalc(); return; }
+        if (e.key === 'Backspace') { progDel(); return; }
+        if (e.key === 'Escape')    { progClear(); return; }
+        if (e.key === '<') { progBit('LSH'); return; }
+        if (e.key === '>') { progBit('RSH'); return; }
+        return;
+    }
+    if (activeTab === 'convert' || activeTab === 'age') return;
+    if (e.key >= '0' && e.key <= '9') numInput(e.key);
+    else if (e.key === '.') inputDot();
+    else if (e.key === '+') setOp('+');
+    else if (e.key === '-') setOp('-');
+    else if (e.key === '*') setOp('*');
+    else if (e.key === '/') { e.preventDefault(); setOp('/'); }
+    else if (e.key === 'Enter' || e.key === '=') calculate();
+    else if (e.key === 'Backspace') deleteLast();
+    else if (e.key === 'Escape')    clearAll();
+});
+</script>
+</body>
+</html>
